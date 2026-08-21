@@ -92,20 +92,23 @@
 
 
   <!-- CATEGORÍAS -->
-  <section class="section categories-section">
+  <section class="section carousel-section">
     <div class="carousel-header">
       <h2 class="section-title">Descubrir</h2>
       <div class="carousel-controls">
-        <button class="carousel-btn" id="btnPrev" aria-label="Anterior">
+        <!-- Botón Anterior con la clase btn-prev -->
+        <button class="carousel-btn btn-prev" aria-label="Anterior">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
         </button>
-        <button class="carousel-btn" id="btnNext" aria-label="Siguiente">
+        <!-- Botón Siguiente con la clase btn-next -->
+        <button class="carousel-btn btn-next" aria-label="Siguiente">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
         </button>
       </div>
     </div>
     
-    <div class="carousel-track" id="productCarousel">
+    <!-- Contenedor del track sin ID -->
+    <div class="carousel-track">
       <div class="carousel-item">
         <div class="img-placeholder">[Foto de Monitor]</div>
         <h3>Monitores</h3>
@@ -133,153 +136,243 @@
     </div>
   </section>
 
-    <!-- RECIÉN VISTOS -->
-  <section class="section">
-    <h2 class="section-title">Recién vistos</h2>
-    <div class="product-grid">
-      <article class="product-card">
-        <div class="product-img">[Imagen del producto]</div>
+  <!-- RECIÉN VISTOS -->
+  <section class="section carousel-section">
+    <div class="carousel-header">
+      <!-- TITULO DE LA SECCION -->
+      <h2 class="section-title">Recién vistos</h2>
+      <div class="carousel-controls">
+        <!-- Botón Anterior con la clase btn-prev -->
+        <button class="carousel-btn btn-prev" aria-label="Anterior">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+        <!-- Botón Siguiente con la clase btn-next -->
+        <button class="carousel-btn btn-next" aria-label="Siguiente">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </button>
+      </div>
+    </div>
+  
+    <div class="carousel-track">
+      <!-- Ítems del carrusel -->
+      <div class="carousel-item">
+        <div class="img-placeholder">[Imagen del producto]</div>
         <div class="product-info">
           <h4>Auriculares 7.1 Surround</h4>
           <span class="price">S/ 210.00</span>
         </div>
         <button class="add-to-cart">Añadir al carrito</button>
-      </article>
-      <article class="product-card">
-        <div class="product-img">[Imagen del producto]</div>
+      </div>
+      <div class="carousel-item">
+        <div class="img-placeholder">[Imagen del producto]</div>
         <div class="product-info">
           <h4>Pasta Térmica Alto Rendimiento</h4>
           <span class="price">S/ 45.00</span>
         </div>
         <button class="add-to-cart">Añadir al carrito</button>
-      </article>
-      <article class="product-card">
-        <div class="product-img">[Imagen del producto]</div>
+      </div>
+      <div class="carousel-item">
+        <div class="img-placeholder">[Imagen del producto]</div>
         <div class="product-info">
           <h4>Mousepad XL Speed</h4>
           <span class="price">S/ 65.00</span>
         </div>
         <button class="add-to-cart">Añadir al carrito</button>
-      </article>
+      </div>
+      <div class="carousel-item">
+        <div class="img-placeholder">[Imagen del producto]</div>
+        <div class="product-info">
+          <h4>Mousepad XL Speed</h4>
+          <span class="price">S/ 65.00</span>
+        </div>
+        <button class="add-to-cart">Añadir al carrito</button>
+      </div>
+      <div class="carousel-item">
+        <div class="img-placeholder">[Imagen del producto]</div>
+        <div class="product-info">
+          <h4>Mousepad XL Speed</h4>
+          <span class="price">S/ 65.00</span>
+        </div>
+        <button class="add-to-cart">Añadir al carrito</button>
+      </div>
+      <div class="carousel-item">
+        <div class="img-placeholder">[Imagen del producto]</div>
+        <div class="product-info">
+          <h4>Mousepad XL Speed</h4>
+          <span class="price">S/ 65.00</span>
+        </div>
+        <button class="add-to-cart">Añadir al carrito</button>
+      </div>
       <article class="product-card" style="opacity: 0;"> <!-- Espacio vacío intencional si no hay más -->
       </article>
     </div>
   </section>
 
   <!-- TENDENCIAS DEL MOMENTO -->
-  <section class="section">
-    <h2 class="section-title">Tendencias del momento</h2>
-    <div class="product-grid">
-      <!-- Producto Base (Repetido 4 veces como ejemplo) -->
-      <article class="product-card">
-        <div class="product-img">[Imagen del producto]</div>
+  <section class="section carousel-section">
+    <div class="carousel-header">
+      <!-- TITULO DE LA SECCION -->
+      <h2 class="section-title">Tendencias del momento</h2>
+      <div class="carousel-controls">
+        <!-- Botón Anterior con la clase btn-prev -->
+        <button class="carousel-btn btn-prev" aria-label="Anterior">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+        <!-- Botón Siguiente con la clase btn-next -->
+        <button class="carousel-btn btn-next" aria-label="Siguiente">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </button>
+      </div>
+    </div>
+  
+    <div class="carousel-track">
+      <!-- Ítems del carrusel -->
+      <div class="carousel-item">
+        <div class="img-placeholder">[Imagen del producto]</div>
         <div class="product-info">
           <h4>Teclado Mecánico Pro</h4>
           <span class="price">S/ 350.00</span>
         </div>
         <button class="add-to-cart">Añadir al carrito</button>
-      </article>
-      <article class="product-card">
-        <div class="product-img">[Imagen del producto]</div>
+      </div>
+      <div class="carousel-item">
+        <div class="img-placeholder">[Imagen del producto]</div>
         <div class="product-info">
           <h4>Monitor 144Hz 24"</h4>
           <span class="price">S/ 890.00</span>
         </div>
         <button class="add-to-cart">Añadir al carrito</button>
-      </article>
-      <article class="product-card">
-        <div class="product-img">[Imagen del producto]</div>
+      </div>
+      <div class="carousel-item">
+        <div class="img-placeholder">[Imagen del producto]</div>
         <div class="product-info">
           <h4>Mouse Inalámbrico RGB</h4>
           <span class="price">S/ 180.00</span>
         </div>
         <button class="add-to-cart">Añadir al carrito</button>
-      </article>
-      <article class="product-card">
-        <div class="product-img">[Imagen del producto]</div>
+      </div>
+      <div class="carousel-item">
+        <div class="img-placeholder">[Imagen del producto]</div>
         <div class="product-info">
           <h4>Case ATX Cristal Templado</h4>
           <span class="price">S/ 220.00</span>
         </div>
         <button class="add-to-cart">Añadir al carrito</button>
+      </div>
+
+      <article class="product-card" style="opacity: 0;"> <!-- Espacio vacío intencional si no hay más -->
       </article>
     </div>
   </section>
 
   <!-- LO MÁS VENDIDO DE LA SEMANA -->
-  <section class="section">
-    <h2 class="section-title">Lo más vendido de la semana</h2>
-    <div class="product-grid">
-      <article class="product-card">
-        <div class="product-img">[Imagen del producto]</div>
+  <section class="section carousel-section">
+    <div class="carousel-header">
+      <!-- TITULO DE LA SECCION -->
+      <h2 class="section-title">Lo más vendido de la semana</h2>
+      <div class="carousel-controls">
+        <!-- Botón Anterior con la clase btn-prev -->
+        <button class="carousel-btn btn-prev" aria-label="Anterior">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+        <!-- Botón Siguiente con la clase btn-next -->
+        <button class="carousel-btn btn-next" aria-label="Siguiente">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </button>
+      </div>
+    </div>
+  
+    <div class="carousel-track">
+      <!-- Ítems del carrusel -->
+      <div class="carousel-item">
+        <div class="img-placeholder">[Imagen del producto]</div>
         <div class="product-info">
           <h4>Memoria RAM 16GB DDR4</h4>
           <span class="price">S/ 190.00</span>
         </div>
         <button class="add-to-cart">Añadir al carrito</button>
-      </article>
-      <article class="product-card">
-        <div class="product-img">[Imagen del producto]</div>
+      </div>
+      <div class="carousel-item">
+        <div class="img-placeholder">[Imagen del producto]</div>
         <div class="product-info">
           <h4>SSD NVMe 1TB</h4>
           <span class="price">S/ 310.00</span>
         </div>
         <button class="add-to-cart">Añadir al carrito</button>
-      </article>
-      <article class="product-card">
-        <div class="product-img">[Imagen del producto]</div>
+      </div>
+      <div class="carousel-item">
+        <div class="img-placeholder">[Imagen del producto]</div>
         <div class="product-info">
           <h4>Fuente de Poder 650W 80+</h4>
           <span class="price">S/ 250.00</span>
         </div>
         <button class="add-to-cart">Añadir al carrito</button>
-      </article>
-      <article class="product-card">
-        <div class="product-img">[Imagen del producto]</div>
+      </div>
+      <div class="carousel-item">
+        <div class="img-placeholder">[Imagen del producto]</div>
         <div class="product-info">
           <h4>Tarjeta de Video RTX 4060</h4>
           <span class="price">S/ 1,450.00</span>
         </div>
         <button class="add-to-cart">Añadir al carrito</button>
+      </div>
+      <article class="product-card" style="opacity: 0;"> <!-- Espacio vacío intencional si no hay más -->
       </article>
     </div>
   </section>
 
   <!-- RECIÉN LLEGADOS -->
-  <section class="section">
-    <h2 class="section-title">Recién llegados</h2>
-    <div class="product-grid">
-      <article class="product-card">
-        <div class="product-img">[Imagen del producto]</div>
+  <section class="section carousel-section">
+    <div class="carousel-header">
+      <!-- TITULO DE LA SECCION -->
+      <h2 class="section-title">Recién llegados</h2>
+      <div class="carousel-controls">
+        <!-- Botón Anterior con la clase btn-prev -->
+        <button class="carousel-btn btn-prev" aria-label="Anterior">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+        <!-- Botón Siguiente con la clase btn-next -->
+        <button class="carousel-btn btn-next" aria-label="Siguiente">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </button>
+      </div>
+    </div>
+  
+    <div class="carousel-track">
+      <!-- Ítems del carrusel -->
+      <div class="carousel-item">
+        <div class="img-placeholder">[Imagen del producto]</div>
         <div class="product-info">
           <h4>Laptop Gamer Serie 7</h4>
           <span class="price">S/ 4,200.00</span>
         </div>
         <button class="add-to-cart">Añadir al carrito</button>
-      </article>
-      <article class="product-card">
-        <div class="product-img">[Imagen del producto]</div>
+      </div>
+      <div class="carousel-item">
+        <div class="img-placeholder">[Imagen del producto]</div>
         <div class="product-info">
           <h4>Cooler Líquido 240mm</h4>
           <span class="price">S/ 380.00</span>
         </div>
         <button class="add-to-cart">Añadir al carrito</button>
-      </article>
-      <article class="product-card">
-        <div class="product-img">[Imagen del producto]</div>
+      </div>
+      <div class="carousel-item">
+        <div class="img-placeholder">[Imagen del producto]</div>
         <div class="product-info">
           <h4>Kit Tiras LED ARGB</h4>
           <span class="price">S/ 90.00</span>
         </div>
         <button class="add-to-cart">Añadir al carrito</button>
-      </article>
-      <article class="product-card">
-        <div class="product-img">[Imagen del producto]</div>
+      </div>
+      <div class="carousel-item">
+        <div class="img-placeholder">[Imagen del producto]</div>
         <div class="product-info">
           <h4>Silla Gamer Ergonómica</h4>
           <span class="price">S/ 650.00</span>
         </div>
         <button class="add-to-cart">Añadir al carrito</button>
+      </div>
+      <article class="product-card" style="opacity: 0;"> <!-- Espacio vacío intencional si no hay más -->
       </article>
     </div>
   </section>

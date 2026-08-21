@@ -10,29 +10,46 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   /* ==========================================
-     1. LÓGICA DEL CARRUSEL DE CATEGORÍAS
+     1. LÓGICA DINÁMICA DE CARRUSELES
      ========================================== */
-  const track = document.getElementById('productCarousel');
-  const btnPrev = document.getElementById('btnPrev');
-  const btnNext = document.getElementById('btnNext');
+  function inicializarCarruseles() {
+    // Buscamos todas las secciones que funcionarán como carrusel
+    const seccionesCarrusel = document.querySelectorAll('.carousel-section');
 
-  if (track && btnPrev && btnNext) {
-    const getScrollAmount = () => {
-      const item = track.querySelector('.carousel-item');
-      if (!item) return 0;
-      const style = window.getComputedStyle(track);
-      const gap = parseFloat(style.gap) || 24; 
-      return item.offsetWidth + gap; 
-    };
+    seccionesCarrusel.forEach(seccion => {
+      // Buscamos los elementos pero SOLO dentro de esta sección específica
+      const track = seccion.querySelector('.carousel-track');
+      const btnPrev = seccion.querySelector('.btn-prev');
+      const btnNext = seccion.querySelector('.btn-next');
 
-    btnNext.addEventListener('click', () => {
-      track.scrollBy({ left: getScrollAmount(), behavior: 'smooth' });
-    });
+      // Si la sección tiene todo lo necesario, aplicamos la lógica
+      if (track && btnPrev && btnNext) {
+        
+        // Evitamos agregar eventos múltiples si la función se llama varias veces
+        if (track.dataset.inicializado === "true") return; 
+        track.dataset.inicializado = "true";
 
-    btnPrev.addEventListener('click', () => {
-      track.scrollBy({ left: -getScrollAmount(), behavior: 'smooth' });
+        const getScrollAmount = () => {
+          const item = track.querySelector('.carousel-item');
+          if (!item) return 0;
+          const style = window.getComputedStyle(track);
+          const gap = parseFloat(style.gap) || 24; 
+          return item.offsetWidth + gap; 
+        };
+
+        btnNext.addEventListener('click', () => {
+          track.scrollBy({ left: getScrollAmount(), behavior: 'smooth' });
+        });
+
+        btnPrev.addEventListener('click', () => {
+          track.scrollBy({ left: -getScrollAmount(), behavior: 'smooth' });
+        });
+      }
     });
   }
+
+  // Ejecutamos la función al cargar la página
+  inicializarCarruseles();
 
   /* ==========================================
      2. LÓGICA DEL MENÚ LATERAL (DRAWER)
