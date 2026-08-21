@@ -361,12 +361,12 @@ document.addEventListener('DOMContentLoaded', () => {
       categorias.forEach(catNombre => {
         const catDetails = document.createElement('details');
         catDetails.className = 'category-group';
-        catDetails.style.margin = '2px 0'; // Aquí damos la separación de 2px que pediste
+        catDetails.style.margin = '2px 0'; 
         
         const catSummary = document.createElement('summary');
         catSummary.textContent = catNombre;
         catSummary.style.cursor = 'pointer';
-        catSummary.style.padding = '4px 0'; // Para que no se vea tan pegado verticalmente
+        catSummary.style.padding = '4px 0'; 
 
         catSummary.addEventListener('click', (e) => {
           if (estado.categoriaActual !== catNombre) {
@@ -420,7 +420,7 @@ document.addEventListener('DOMContentLoaded', () => {
               const label = document.createElement('label');
               label.style.display = 'block';
               label.style.fontSize = '0.85em';
-              label.style.marginTop = '2px'; // Los 2px de separación en las opciones
+              label.style.marginTop = '2px'; 
               label.style.marginBottom = '2px';
               
               const checkbox = document.createElement('input');
