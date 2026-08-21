@@ -1,18 +1,30 @@
-// Parallax sutil del producto respecto al mouse
-const heroVisual = document.getElementById('heroVisual');
-const glow = document.getElementById('glow');
-const productSlot = document.getElementById('productSlot');
+document.addEventListener('DOMContentLoaded', () => {
+  const track = document.getElementById('productCarousel');
+  const btnPrev = document.getElementById('btnPrev');
+  const btnNext = document.getElementById('btnNext');
 
-heroVisual.addEventListener('mousemove', (e) => {
-  const rect = heroVisual.getBoundingClientRect();
-  const x = (e.clientX - rect.left - rect.width / 2) / rect.width;
-  const y = (e.clientY - rect.top - rect.height / 2) / rect.height;
+  if (!track || !btnPrev || !btnNext) return;
 
-  glow.style.transform = `translate(${x * 20}px, ${y * 20}px)`;
-  productSlot.style.transform = `translate(${x * 10}px, ${y * 10}px)`;
-});
+  const getScrollAmount = () => {
+    const item = track.querySelector('.carousel-item');
+    if (!item) return 0;
+    // Ancho de la tarjeta + gap (24px)
+    const style = window.getComputedStyle(track);
+    const gap = parseFloat(style.gap) || 24; 
+    return item.offsetWidth + gap; 
+  };
 
-heroVisual.addEventListener('mouseleave', () => {
-  glow.style.transform = 'translate(0, 0)';
-  productSlot.style.transform = 'translate(0, 0)';
+  btnNext.addEventListener('click', () => {
+    track.scrollBy({ 
+      left: getScrollAmount(), 
+      behavior: 'smooth' 
+    });
+  });
+
+  btnPrev.addEventListener('click', () => {
+    track.scrollBy({ 
+      left: -getScrollAmount(), 
+      behavior: 'smooth' 
+    });
+  });
 });
