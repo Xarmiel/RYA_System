@@ -14,7 +14,7 @@ public class UsuarioMapper {
         usuario.setNombre(dto.nombre());
         usuario.setEmail(dto.email());
         usuario.setTelefono(dto.telefono());
-        usuario.setPasswordHash(dto.password()); // Hash gestionado en el servicio
+        usuario.setPasswordHash(dto.password()); 
         usuario.setRol(dto.rol() != null ? dto.rol() : RolUsuario.CLIENTE);
         return usuario;
     }

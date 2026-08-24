@@ -1,4 +1,3 @@
-// src/main/java/com/ecommerce/backend/dto/request/ProductoCreateDTO.java
 package com.ecommerce.backend.dto.request;
 
 import com.ecommerce.backend.model.enums.TipoProductoEnum;
