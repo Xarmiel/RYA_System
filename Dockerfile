@@ -1,4 +1,4 @@
-# Etapa 1: Compilación con Maven y Java 17 (o 21 según tu versión)
+# Etapa 1: Compilación con Maven y Java 25
 FROM eclipse-temurin:25-jdk AS build
 WORKDIR /app
 COPY . .
