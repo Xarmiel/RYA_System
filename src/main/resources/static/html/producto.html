@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cargando producto...</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/header.css">
+  <link rel="stylesheet" href="../css/product-detail.css">
+</head>
+<body>
+  <header>
+    <div class="logo">RYA</div>
+    <nav><ul><li><a href="index.html">Catálogo</a></li><li><a href="#">Consultoría</a></li><li><a href="#">Soporte</a></li></ul></nav>
+    <div class="nav-icons"><button class="cart-btn" type="button">Carrito (0)</button></div>
+  </header>
+  <main class="page-content">
+    <nav class="breadcrumb" id="prod-breadcrumb" aria-label="Ruta del producto"></nav>
+    <section class="product-hero">
+      <div class="product-gallery"><div class="main-image"><img id="prod-image" src="" alt="Imagen del producto"></div></div>
+      <div class="product-info-panel">
+        <span class="brand" id="prod-brand"></span>
+        <h1 class="product-title" id="prod-title">Cargando producto...</h1>
+        <p class="product-category" id="prod-category"></p>
+        <div class="rating" aria-label="Producto recomendado"><span aria-hidden="true">★★★★★</span> <span>Producto recomendado</span></div>
+        <div class="price-box"><span class="current-price" id="prod-price"></span><span class="tax-note">Precio incluye IGV</span></div>
+        <p class="product-description" id="prod-description"></p>
+        <div class="variants" id="prod-variants"></div>
+        <div class="purchase-box">
+          <div class="quantity-selector"><button type="button" data-quantity="decrease" aria-label="Reducir cantidad">−</button><input id="prod-quantity" type="number" value="1" min="1" max="99" aria-label="Cantidad"><button type="button" data-quantity="increase" aria-label="Aumentar cantidad">+</button></div>
+          <button class="add-to-cart btn-primary" id="add-to-cart" type="button">AGREGAR AL CARRITO</button>
+        </div>
+        <p class="cart-feedback" id="cart-feedback" role="status" aria-live="polite"></p>
+        <div class="availability"><p>🚚 Despacho a domicilio disponible</p><p>📦 Retiro en tienda disponible</p></div>
+      </div>
+    </section>
+    <section class="product-details-section"><h2 class="section-title">Especificaciones técnicas</h2><div class="specs-table" id="prod-specs-table"></div></section>
+  </main>
+  <script type="module" src="../js/product-datail.js"></script>
+</body>
+</html>
