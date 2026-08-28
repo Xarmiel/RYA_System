@@ -110,12 +110,12 @@ function renderizarUI(opcionesDisponibles) {
 
       if (estado.categoriaActual === catNombre) {
         catDetails.open = true; 
-        catSummary.style.color = '#C6FF3D'; 
+        catSummary.style.color = 'var(--color-cyan)';
         catSummary.style.fontWeight = 'bold';
 
         const filtersContainer = document.createElement('div');
         filtersContainer.style.paddingLeft = '15px'; 
-        filtersContainer.style.borderLeft = '2px solid #eee';
+        filtersContainer.style.borderLeft = '2px solid var(--color-cyan)';
         filtersContainer.style.marginTop = '8px';
 
         Object.keys(opcionesDisponibles).forEach(attrClave => {
@@ -135,7 +135,7 @@ function renderizarUI(opcionesDisponibles) {
           const filterSummary = document.createElement('summary');
           filterSummary.textContent = titulo;
           filterSummary.style.fontSize = '0.9em';
-          filterSummary.style.color = '#555';
+          filterSummary.style.color = 'var(--color-gray)';
           filterDetails.appendChild(filterSummary);
 
           const divOptions = document.createElement('div');

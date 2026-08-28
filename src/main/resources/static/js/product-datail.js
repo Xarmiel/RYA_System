@@ -81,7 +81,7 @@ function renderizarProducto(producto) {
 function crearImagenProducto(producto) {
   const marca = escapeXml(producto.fabricante);
   const categoria = escapeXml(producto.categoria);
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="760" height="760" viewBox="0 0 760 760"><rect width="760" height="760" fill="#101218"/><rect x="54" y="54" width="652" height="652" rx="32" fill="#171a22" stroke="#c6ff3d" stroke-width="3"/><circle cx="380" cy="290" r="108" fill="#c6ff3d" opacity=".13"/><path d="M320 290h120M380 230v120" stroke="#c6ff3d" stroke-width="12" stroke-linecap="round"/><text x="380" y="480" fill="#f5f6f8" font-family="Arial, sans-serif" font-size="38" font-weight="700" text-anchor="middle">${marca}</text><text x="380" y="530" fill="#9aa0ac" font-family="Arial, sans-serif" font-size="24" text-anchor="middle">${categoria}</text></svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="760" height="760" viewBox="0 0 760 760"><rect width="760" height="760" fill="#000000"/><rect x="54" y="54" width="652" height="652" rx="32" fill="#030914" stroke="#00D4FF" stroke-width="3"/><circle cx="380" cy="290" r="108" fill="#00D4FF" opacity=".13"/><path d="M320 290h120M380 230v120" stroke="#00D4FF" stroke-width="12" stroke-linecap="round"/><text x="380" y="480" fill="#F5F7FA" font-family="Arial, sans-serif" font-size="38" font-weight="700" text-anchor="middle">${marca}</text><text x="380" y="530" fill="#C2C5CC" font-family="Arial, sans-serif" font-size="24" text-anchor="middle">${categoria}</text></svg>`;
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
 }
 

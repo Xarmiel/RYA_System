@@ -7,7 +7,7 @@
   padding: 20px; display: flex; flex-direction: column; transition: all 0.3s ease;
 }
 .product-card:hover {
-  background: #181b24; border-color: rgba(255, 255, 255, 0.2); transform: translateY(-5px);
+  background: var(--color-blue-black); border-color: var(--color-gray); transform: translateY(-5px);
 }
 
 .product-img {
@@ -51,7 +51,7 @@
 
 .product-info .price {
   display: block;
-  font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700; color: var(--lime);
+  font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700; color: var(--color-cyan);
 }
 
 .add-to-cart {
@@ -59,7 +59,7 @@
   padding: 12px; border-radius: 8px; font-size: 14px; font-weight: 500;
   font-family: 'Inter', sans-serif; cursor: pointer; transition: all 0.2s ease;
 }
-.add-to-cart:hover { background: #d3d3d3; color: #0a0a0a; border-color: #d3d3d3; }
+.add-to-cart:hover, .add-to-cart:focus-visible { background: var(--color-gray); color: var(--color-black); border-color: var(--color-gray); }
 
 .brands-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; }
 .brand-box {
@@ -67,4 +67,4 @@
   height: 100px; display: flex; align-items: center; justify-content: center;
   color: var(--muted); font-size: 13px; transition: all 0.2s ease; cursor: pointer;
 }
-.brand-box:hover { background: #d3d3d3; color: #0a0a0a; border-color: #d3d3d3; }
+.brand-box:hover { background: var(--color-gray); color: var(--color-black); border-color: var(--color-gray); }
