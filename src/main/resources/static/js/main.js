@@ -1,12 +1,3 @@
-import { crearTarjetaProducto } from './product-card.js';
-import { JERARQUIA_CATEGORIAS } from './config.js';
-import { inicializarCarruseles } from './carousel.js';
-import { inicializarFiltros, obtenerEstadoFiltros, resetearFiltros } from './filters.js';
-import { inicializarSidebar } from './sidebar.js';
-import { Cart } from './cart.js';
-import { fetchProductos } from './data.js';
-import { inicializarMonitorDeRed, renderizarSkeletonsCatalogo, crearTarjetaErrorRed } from './network-ui.js';
-
 const contenedorCatalogo = document.getElementById('carousels-container');
 const searchInput = document.getElementById('catalogSearchInput') || document.querySelector('.search-box input');
 const sortSelect = document.getElementById('catalogSortSelect') || document.querySelector('.sort-box select');
@@ -113,14 +104,14 @@ function ordenarProductos(lista, criterio) {
   const copia = [...lista];
   switch (criterio) {
     case 'price-asc':
-      return copia.sort((a, b) => a.precio - b.precio);
+      return copia.sort((a, b) => Number(a.precio) - Number(b.precio));
     case 'price-desc':
-      return copia.sort((a, b) => b.precio - a.precio);
+      return copia.sort((a, b) => Number(b.precio) - Number(a.precio));
     case 'brand-asc':
-      return copia.sort((a, b) => a.fabricante.localeCompare(b.fabricante, 'es', { sensitivity: 'base' }));
+      return copia.sort((a, b) => (a.fabricante || '').localeCompare(b.fabricante || '', 'es', { sensitivity: 'base' }));
     case 'relevance':
     default:
-      return copia.sort((a, b) => a.id - b.id);
+      return copia.sort((a, b) => (Number(a.id) || 0) - (Number(b.id) || 0));
   }
 }
 
@@ -133,12 +124,12 @@ function crearSeccionCarrusel(categoria, cantidadTotal) {
   section.innerHTML = `
     <div class="carousel-header">
       <h2 class="section-title">
-        ${categoria}
+        ${escapeHtml(categoria)}
         <span class="category-count">(${cantidadTotal})</span>
       </h2>
       <div class="carousel-controls">
-        <button class="carousel-btn btn-prev" aria-label="Anterior en ${categoria}">&#8592;</button>
-        <button class="carousel-btn btn-next" aria-label="Siguiente en ${categoria}">&#8594;</button>
+        <button class="carousel-btn btn-prev" aria-label="Anterior en ${escapeHtml(categoria)}">&#8592;</button>
+        <button class="carousel-btn btn-next" aria-label="Siguiente en ${escapeHtml(categoria)}">&#8594;</button>
       </div>
     </div>
     <div class="carousel-track" id="track-${slug(categoria)}"></div>
@@ -149,22 +140,24 @@ function crearSeccionCarrusel(categoria, cantidadTotal) {
 /**
  * Renderiza el catálogo completo aplicando búsqueda en vivo, filtros laterales y ordenamiento dinámico.
  */
-export function renderizarCatalogo() {
-  if (!contenedorCatalogo) return;
+function renderizarCatalogo() {
+  const cont = document.getElementById('carousels-container');
+  if (!cont) return;
 
-  const estadoFiltros = obtenerEstadoFiltros();
+  const fnObtenerFiltros = (typeof window !== 'undefined' && window.obtenerEstadoFiltros) ? window.obtenerEstadoFiltros : (typeof obtenerEstadoFiltros === 'function' ? obtenerEstadoFiltros : () => ({}));
+  const estadoFiltros = fnObtenerFiltros();
   
   // 1. Filtrar productos según búsqueda y filtros laterales
   const productosFiltrados = todosLosProductos.filter(p => 
     productoCumpleBusqueda(p, busquedaActual) && productoCumpleFiltros(p, estadoFiltros)
   );
 
-  contenedorCatalogo.innerHTML = '';
+  cont.innerHTML = '';
 
   // 2. Feedback visual de búsqueda activa o filtros si están aplicados
   const tieneBusqueda = busquedaActual.trim().length > 0;
   const tieneFiltroCat = !!estadoFiltros.categoriaActual;
-  const totalFiltrosAttr = Object.values(estadoFiltros.filtrosSeleccionados || {}).reduce((acc, arr) => acc + arr.length, 0);
+  const totalFiltrosAttr = Object.values(estadoFiltros.filtrosSeleccionados || {}).reduce((acc, arr) => acc + (arr ? arr.length : 0), 0);
 
   if (tieneBusqueda || tieneFiltroCat || totalFiltrosAttr > 0) {
     const feedbackDiv = document.createElement('div');
@@ -190,7 +183,7 @@ export function renderizarCatalogo() {
       limpiarTodo();
     });
 
-    contenedorCatalogo.appendChild(feedbackDiv);
+    cont.appendChild(feedbackDiv);
   }
 
   // 3. Caso: Sin resultados
@@ -208,19 +201,21 @@ export function renderizarCatalogo() {
       limpiarTodo();
     });
 
-    contenedorCatalogo.appendChild(noResults);
+    cont.appendChild(noResults);
     return;
   }
 
   // 4. Agrupar productos filtrados por categoría respetando la jerarquía definida
-  const todasLasCategorias = Object.values(JERARQUIA_CATEGORIAS).flat();
+  const jerarquiaCfg = (typeof window !== 'undefined' && window.JERARQUIA_CATEGORIAS) ? window.JERARQUIA_CATEGORIAS : (typeof JERARQUIA_CATEGORIAS !== 'undefined' ? JERARQUIA_CATEGORIAS : {});
+  const todasLasCategorias = Object.values(jerarquiaCfg).flat();
   
-  // Incluimos cualquier otra categoría presente en los datos
   const categoriasPresentes = [...new Set(productosFiltrados.map(p => p.categoria))];
   const ordenCategorias = [
     ...todasLasCategorias.filter(c => categoriasPresentes.includes(c)),
     ...categoriasPresentes.filter(c => !todasLasCategorias.includes(c))
   ];
+
+  const fnCrearTarjeta = (typeof window !== 'undefined' && window.crearTarjetaProducto) ? window.crearTarjetaProducto : (typeof crearTarjetaProducto === 'function' ? crearTarjetaProducto : null);
 
   ordenCategorias.forEach(catNombre => {
     const productosEnCategoria = productosFiltrados.filter(p => p.categoria === catNombre);
@@ -230,16 +225,19 @@ export function renderizarCatalogo() {
     const productosOrdenados = ordenarProductos(productosEnCategoria, ordenActual);
 
     const seccion = crearSeccionCarrusel(catNombre, productosOrdenados.length);
-    contenedorCatalogo.appendChild(seccion);
+    cont.appendChild(seccion);
 
     const track = seccion.querySelector('.carousel-track');
-    productosOrdenados.forEach(p => {
-      track.appendChild(crearTarjetaProducto(p));
-    });
+    if (track && fnCrearTarjeta) {
+      productosOrdenados.forEach(p => {
+        track.appendChild(fnCrearTarjeta(p));
+      });
+    }
   });
 
   // 5. Inicializar eventos de navegación de los carruseles creados
-  inicializarCarruseles();
+  const fnInitCarruseles = (typeof window !== 'undefined' && window.inicializarCarruseles) ? window.inicializarCarruseles : (typeof inicializarCarruseles === 'function' ? inicializarCarruseles : null);
+  if (fnInitCarruseles) fnInitCarruseles();
 }
 
 /**
@@ -250,21 +248,29 @@ function limpiarTodo() {
   if (searchInput) searchInput.value = '';
   if (sortSelect) sortSelect.value = 'relevance';
   ordenActual = 'relevance';
-  resetearFiltros();
+  
+  const fnResetFiltros = (typeof window !== 'undefined' && window.resetearFiltros) ? window.resetearFiltros : (typeof resetearFiltros === 'function' ? resetearFiltros : null);
+  if (fnResetFiltros) fnResetFiltros();
+  
   actualizarUrlBusqueda('');
+  renderizarCatalogo();
 }
 
 /**
  * Actualiza la URL con el parámetro de búsqueda sin recargar la página
  */
 function actualizarUrlBusqueda(query) {
-  const url = new URL(window.location);
-  if (query && query.trim()) {
-    url.searchParams.set('search', query.trim());
-  } else {
-    url.searchParams.delete('search');
+  try {
+    const url = new URL(window.location);
+    if (query && query.trim()) {
+      url.searchParams.set('search', query.trim());
+    } else {
+      url.searchParams.delete('search');
+    }
+    window.history.replaceState({}, '', url);
+  } catch (e) {
+    // Ignorar si el navegador restringe replaceState en file://
   }
-  window.history.replaceState({}, '', url);
 }
 
 /**
@@ -285,17 +291,20 @@ function escapeHtml(texto) {
  * Configura los eventos interactivos de la barra de búsqueda y el selector de orden
  */
 function inicializarBuscadorYOrdenamiento() {
+  const inputEl = document.getElementById('catalogSearchInput') || document.querySelector('.search-box input');
+  const selEl = document.getElementById('catalogSortSelect') || document.querySelector('.sort-box select');
+
   // 1. Búsqueda en tiempo real (evento input)
-  if (searchInput) {
-    searchInput.addEventListener('input', (e) => {
+  if (inputEl) {
+    inputEl.addEventListener('input', (e) => {
       busquedaActual = e.target.value;
       actualizarUrlBusqueda(busquedaActual);
       renderizarCatalogo();
     });
 
-    searchInput.addEventListener('keydown', (e) => {
+    inputEl.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
-        searchInput.value = '';
+        inputEl.value = '';
         busquedaActual = '';
         actualizarUrlBusqueda('');
         renderizarCatalogo();
@@ -304,8 +313,8 @@ function inicializarBuscadorYOrdenamiento() {
   }
 
   // 2. Ordenamiento dinámico (evento change)
-  if (sortSelect) {
-    sortSelect.addEventListener('change', (e) => {
+  if (selEl) {
+    selEl.addEventListener('change', (e) => {
       ordenActual = e.target.value;
       renderizarCatalogo();
     });
@@ -321,57 +330,80 @@ function inicializarBuscadorYOrdenamiento() {
  * Expone la función global para agregar productos al carrito
  */
 window.agregarAlCarrito = (id) => {
-  Cart.addItemById(id);
+  if (window.Cart && window.Cart.addItemById) {
+    window.Cart.addItemById(id);
+  }
 };
 
 /**
- * Carga los productos desde la fuente de datos mostrando skeletons y manejando posibles errores de red.
+ * Carga los productos desde la fuente de datos mostrando skeletons y renderizando el catálogo.
  */
 async function cargarDatosCatalogo() {
-  if (!contenedorCatalogo) return;
+  const cont = document.getElementById('carousels-container');
+  if (!cont) return;
 
-  // 1. Mostrar estado de carga (Skeletons con animación de brillo)
-  renderizarSkeletonsCatalogo(contenedorCatalogo, 3, 4);
+  // 1. Mostrar estado de carga (Skeletons)
+  const fnSkeletons = (typeof window !== 'undefined' && window.renderizarSkeletonsCatalogo) ? window.renderizarSkeletonsCatalogo : (typeof renderizarSkeletonsCatalogo === 'function' ? renderizarSkeletonsCatalogo : null);
+  if (fnSkeletons) fnSkeletons(cont, 3, 4);
 
   try {
-    todosLosProductos = await fetchProductos();
+    const fetchFn = (typeof window !== 'undefined' && window.fetchProductos) ? window.fetchProductos : (typeof fetchProductos === 'function' ? fetchProductos : null);
+    if (fetchFn) {
+      todosLosProductos = await fetchFn();
+    } else if (typeof PRODUCTOS_DATA !== 'undefined') {
+      todosLosProductos = [...PRODUCTOS_DATA];
+    } else if (window.PRODUCTOS_DATA) {
+      todosLosProductos = [...window.PRODUCTOS_DATA];
+    }
     
-    // Si la carga fue exitosa, renderizamos el catálogo completo
+    // Renderizamos el catálogo completo
     renderizarCatalogo();
   } catch (error) {
     console.error('Error al obtener los productos del catálogo:', error);
-    contenedorCatalogo.innerHTML = '';
-
-    const esOffline = !navigator.onLine || error.message === 'NETWORK_OFFLINE';
-    const cardError = crearTarjetaErrorRed({
-      titulo: esOffline ? 'Sin Conexión a Internet' : 'No se pudo conectar con el catálogo',
-      mensaje: esOffline
-        ? 'Parece que perdiste el acceso a internet. Revisa tu red Wi-Fi o datos móviles y vuelve a intentarlo.'
-        : 'Hubo una dificultad al cargar los componentes desde los servidores de RYA Tech. Por favor, reintenta la conexión.',
-      onRetry: () => {
-        cargarDatosCatalogo();
-      }
-    });
-
-    contenedorCatalogo.appendChild(cardError);
+    
+    // Si ocurre cualquier error, cargamos directamente los datos locales de emergencia
+    if (typeof PRODUCTOS_DATA !== 'undefined') {
+      todosLosProductos = [...PRODUCTOS_DATA];
+      renderizarCatalogo();
+    } else if (window.PRODUCTOS_DATA) {
+      todosLosProductos = [...window.PRODUCTOS_DATA];
+      renderizarCatalogo();
+    }
   }
 }
 
-// Inicialización de la aplicación al cargar el DOM
-document.addEventListener('DOMContentLoaded', async () => {
-  inicializarMonitorDeRed();
-  Cart.init();
-  inicializarSidebar();
-  await inicializarFiltros();
+// Función principal de inicialización que corre en cualquier navegador
+function inicializarAppCatalogo() {
+  if (window.__catalogoAppIniciada) return;
+  window.__catalogoAppIniciada = true;
 
-  // Leer parámetro ?search= de la URL si existe (ej. viniendo de inicio.html)
-  const urlParams = new URLSearchParams(window.location.search);
-  const paramSearch = urlParams.get('search');
-  if (paramSearch && searchInput) {
-    searchInput.value = paramSearch;
-    busquedaActual = paramSearch;
-  }
+  if (typeof inicializarMonitorDeRed === 'function') inicializarMonitorDeRed();
+  if (window.Cart && window.Cart.init) window.Cart.init();
+  if (typeof inicializarSidebar === 'function') inicializarSidebar();
+  if (typeof inicializarFiltros === 'function') inicializarFiltros();
+
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const paramSearch = urlParams.get('search');
+    const inputEl = document.getElementById('catalogSearchInput') || document.querySelector('.search-box input');
+    if (paramSearch && inputEl) {
+      inputEl.value = paramSearch;
+      busquedaActual = paramSearch;
+    }
+  } catch (e) {}
 
   inicializarBuscadorYOrdenamiento();
-  await cargarDatosCatalogo();
-});
+  cargarDatosCatalogo();
+}
+
+// Ejecutar cuando el DOM esté listo (compatible con todos los navegadores)
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', inicializarAppCatalogo);
+} else {
+  inicializarAppCatalogo();
+}
+
+if (typeof window !== 'undefined') {
+  window.renderizarCatalogo = renderizarCatalogo;
+  window.cargarDatosCatalogo = cargarDatosCatalogo;
+}

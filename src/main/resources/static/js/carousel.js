@@ -1,4 +1,4 @@
-export function inicializarCarruseles() {
+function inicializarCarruseles() {
   const seccionesCarrusel = document.querySelectorAll('.carousel-section');
 
   seccionesCarrusel.forEach(seccion => {
@@ -13,14 +13,13 @@ export function inicializarCarruseles() {
 
       const getScrollAmount = () => {
         const item = track.querySelector('.carousel-item');
-        if (!item) return 0;
+        if (!item) return 280;
         const style = window.getComputedStyle(track);
         const gap = parseFloat(style.gap) || 24; 
         return item.offsetWidth + gap; 
       };
 
       btnNext.addEventListener('click', () => {
-        // Al sumar a scrollLeft, el CSS "scroll-behavior: smooth" hace la magia
         track.scrollLeft += getScrollAmount();
       });
 
@@ -29,4 +28,8 @@ export function inicializarCarruseles() {
       });
     }
   });
+}
+
+if (typeof window !== 'undefined') {
+  window.inicializarCarruseles = inicializarCarruseles;
 }

@@ -1,4 +1,4 @@
-export const REGLAS_DE_DEPENDENCIA = {
+const REGLAS_DE_DEPENDENCIA = {
   "Placas Madre": { activa: ["socket_placa", "chipset_gama", "formato_placa", "tipo_ram_placa", "conectividad_placa", "generacion_pcie_placa"] },
   "Procesadores": { activa: ["gama_cpu", "linea_cpu", "socket_cpu", "tecnologia_cpu", "presupuesto_cpu"] },
   "Tarjetas Gráficas": { activa: ["chipset_gpu", "gama_resolucion", "memoria_vram", "serie_gpu", "ensamblador_gpu", "enfriamiento_gpu", "conector_energia_gpu"] },
@@ -21,14 +21,9 @@ export const REGLAS_DE_DEPENDENCIA = {
   "Mousepads": { activa: ["tamaño_mousepad", "superficie_mousepad", "material_mousepad", "iluminacion_mousepad", "grosor_mousepad", "caracteristicas_mousepad"] }
 };
 
-export const FILTROS_GLOBALES = ["fabricante"];
+const FILTROS_GLOBALES = ["fabricante"];
 
-// Atributos que se muestran como "specs" (chips grises) en la tarjeta de producto,
-// en el orden y combinación pedidos para cada categoría.
-// Nota: donde el dato pedido no existe todavía en data.js (ej. "conectividad_mic"),
-// se usa el atributo más cercano disponible; basta con agregar el campo real a
-// data.js y actualizar esta lista para que se refleje automáticamente.
-export const ATRIBUTOS_TARJETA = {
+const ATRIBUTOS_TARJETA = {
   "Placas Madre": ["socket_placa", "chipset_gama", "formato_placa"],
   "Procesadores": ["linea_cpu", "socket_cpu"],
   "Tarjetas Gráficas": ["serie_gpu", "memoria_vram"],
@@ -51,7 +46,7 @@ export const ATRIBUTOS_TARJETA = {
   "Mousepads": ["tamaño_mousepad", "material_mousepad"]
 };
 
-export const NOMBRES_LEGIBLES = {
+const NOMBRES_LEGIBLES = {
   "fabricante": "Fabricante",
   "socket_placa": "Socket / Procesador", "chipset_gama": "Chipset (Gama)", "formato_placa": "Formato (Tamaño)", "tipo_ram_placa": "Tipo de Memoria RAM", "conectividad_placa": "Conectividad Integrada", "generacion_pcie_placa": "Generación PCIe",
   "gama_cpu": "Gama de Rendimiento", "linea_cpu": "Línea de Producto", "socket_cpu": "Socket", "tecnologia_cpu": "Tecnología Gaming", "presupuesto_cpu": "Presupuesto",
@@ -75,7 +70,7 @@ export const NOMBRES_LEGIBLES = {
   "tamaño_mousepad": "Tamaño", "superficie_mousepad": "Superficie", "material_mousepad": "Material", "iluminacion_mousepad": "Iluminación", "grosor_mousepad": "Grosor", "caracteristicas_mousepad": "Características"
 };
 
-export const JERARQUIA_CATEGORIAS = {
+const JERARQUIA_CATEGORIAS = {
   "Hardware": [
     "Placas Madre", "Procesadores", "Tarjetas Gráficas", "Almacenamiento", "Memoria RAM",
     "Fuentes de Poder", "Gabinetes", "Enfriamiento Líquido", "Ventiladores y Disipadores", "Tarjetas de Red"
@@ -85,3 +80,12 @@ export const JERARQUIA_CATEGORIAS = {
     "Cámaras Web", "Micrófonos USB", "Discos Duros Externos", "Hubs y Estaciones", "Mousepads"
   ]
 };
+
+// Exportación global universal para compatibilidad con todos los navegadores
+if (typeof window !== 'undefined') {
+  window.REGLAS_DE_DEPENDENCIA = REGLAS_DE_DEPENDENCIA;
+  window.FILTROS_GLOBALES = FILTROS_GLOBALES;
+  window.ATRIBUTOS_TARJETA = ATRIBUTOS_TARJETA;
+  window.NOMBRES_LEGIBLES = NOMBRES_LEGIBLES;
+  window.JERARQUIA_CATEGORIAS = JERARQUIA_CATEGORIAS;
+}

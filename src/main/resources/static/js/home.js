@@ -1,20 +1,20 @@
-import { obtenerProductosPorCategoria } from './api.js';
-import { Cart } from './cart.js';
-import { inicializarMonitorDeRed, crearSkeletonCard, crearTarjetaErrorRed } from './network-ui.js';
-
 async function renderizarCarrusel(categoria, contenedorId) {
   const contenedor = document.getElementById(contenedorId);
   if (!contenedor) return;
 
   // 1. Mostrar estado de carga (Skeletons)
   contenedor.innerHTML = '';
-  for (let i = 0; i < 4; i++) {
-    contenedor.appendChild(crearSkeletonCard());
+  const fnSkeleton = (typeof window !== 'undefined' && window.crearSkeletonCard) ? window.crearSkeletonCard : (typeof crearSkeletonCard === 'function' ? crearSkeletonCard : null);
+  if (fnSkeleton) {
+    for (let i = 0; i < 4; i++) {
+      contenedor.appendChild(fnSkeleton());
+    }
   }
 
   try {
-    // 2. Pedir los datos a nuestra "API"
-    const productos = await obtenerProductosPorCategoria(categoria);
+    // 2. Pedir los datos a nuestra API
+    const fnObtener = (typeof window !== 'undefined' && window.obtenerProductosPorCategoria) ? window.obtenerProductosPorCategoria : (typeof obtenerProductosPorCategoria === 'function' ? obtenerProductosPorCategoria : null);
+    const productos = fnObtener ? await fnObtener(categoria) : [];
 
     // 3. Limpiar los skeletons
     contenedor.innerHTML = '';
@@ -25,18 +25,24 @@ async function renderizarCarrusel(categoria, contenedorId) {
       articulo.className = 'carousel-item';
       
       // Al hacer clic, redirigimos a la página de detalle con el ID
-      articulo.onclick = () => window.location.href = `producto.html?id=${producto.id}`;
+      articulo.onclick = () => {
+        window.location.href = `producto.html?id=${producto.id}`;
+      };
+
+      const fab = producto.fabricante || 'RYA';
+      const cat = producto.categoria || 'Componente';
+      const precio = Number(producto.precio || 0).toFixed(2);
 
       articulo.innerHTML = `
         <div class="img-placeholder">
-          <span>[Foto ${producto.fabricante}]</span> 
+          <span>[Foto ${fab}]</span> 
         </div>
         <div class="product-info">
-          <h4 style="color: var(--muted); font-size: 12px;">${producto.fabricante}</h4>
-          <h3>${producto.categoria}</h3>
-          <span class="price">S/ ${producto.precio.toFixed(2)}</span>
+          <h4 style="color: var(--muted); font-size: 12px; margin-bottom: 4px;">${fab}</h4>
+          <h3 style="font-size: 16px; margin: 0 0 8px 0;">${cat}</h3>
+          <span class="price">S/ ${precio}</span>
         </div>
-        <button class="add-to-cart" onclick="event.stopPropagation(); window.agregarAlCarrito(${producto.id})">
+        <button class="add-to-cart" type="button" onclick="event.stopPropagation(); if (window.agregarAlCarrito) window.agregarAlCarrito(${producto.id});">
           Añadir al carrito
         </button>
       `;
@@ -46,25 +52,22 @@ async function renderizarCarrusel(categoria, contenedorId) {
   } catch (error) {
     console.error(`Error al cargar la categoría ${categoria}:`, error);
     contenedor.innerHTML = '';
-    const errorCard = crearTarjetaErrorRed({
-      titulo: `No se pudieron cargar ${categoria}`,
-      mensaje: 'Revisa tu conexión a internet para ver los productos recomendados.',
-      onRetry: () => {
-        renderizarCarrusel(categoria, contenedorId);
-      }
-    });
-    contenedor.appendChild(errorCard);
   }
 }
 
 window.agregarAlCarrito = (id) => {
-  Cart.addItemById(id);
+  if (window.Cart && window.Cart.addItemById) {
+    window.Cart.addItemById(id);
+  }
 };
 
-// Ejecutamos la función para llenar las diferentes secciones
-document.addEventListener('DOMContentLoaded', () => {
-  inicializarMonitorDeRed();
-  Cart.init();
+function inicializarAppHome() {
+  if (window.__homeAppIniciada) return;
+  window.__homeAppIniciada = true;
+
+  if (typeof inicializarMonitorDeRed === 'function') inicializarMonitorDeRed();
+  if (window.Cart && window.Cart.init) window.Cart.init();
+
   renderizarCarrusel('Placas Madre', 'track-placas');
   renderizarCarrusel('Procesadores', 'track-procesadores');
   renderizarCarrusel('Tarjetas Gráficas', 'track-gpus');
@@ -75,5 +78,10 @@ document.addEventListener('DOMContentLoaded', () => {
       window.location.href = `index.html?search=${encodeURIComponent(searchInput.value.trim())}`;
     }
   });
-});
-
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', inicializarAppHome);
+} else {
+  inicializarAppHome();
+}

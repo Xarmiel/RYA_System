@@ -6,12 +6,12 @@
  * Inicializa el monitor de conectividad de red (Online / Offline)
  * Muestra notificaciones flotantes contextuales ante pérdidas o restauraciones de internet.
  */
-export function inicializarMonitorDeRed() {
-  if (window.__networkMonitorInit) return;
+function inicializarMonitorDeRed() {
+  if (typeof window === 'undefined' || window.__networkMonitorInit) return;
   window.__networkMonitorInit = true;
 
   let toastEl = document.getElementById('network-status-toast');
-  if (!toastEl) {
+  if (!toastEl && document.body) {
     toastEl = document.createElement('div');
     toastEl.id = 'network-status-toast';
     toastEl.className = 'network-status-toast';
@@ -23,6 +23,7 @@ export function inicializarMonitorDeRed() {
   let toastTimeout = null;
 
   const showToast = (isOnline) => {
+    if (!toastEl) return;
     clearTimeout(toastTimeout);
     toastEl.className = `network-status-toast is-visible ${isOnline ? 'is-online' : 'is-offline'}`;
     toastEl.innerHTML = isOnline
@@ -41,7 +42,7 @@ export function inicializarMonitorDeRed() {
 /**
  * Genera el HTML de una tarjeta Skeleton individual con animación de brillo.
  */
-export function crearSkeletonCard() {
+function crearSkeletonCard() {
   const card = document.createElement('div');
   card.className = 'skeleton-card';
   card.innerHTML = `
@@ -60,7 +61,7 @@ export function crearSkeletonCard() {
  * @param {number} numSecciones Cantidad de secciones a simular (por defecto 3)
  * @param {number} numCards Cantidad de tarjetas skeleton por sección (por defecto 4)
  */
-export function renderizarSkeletonsCatalogo(contenedor, numSecciones = 3, numCards = 4) {
+function renderizarSkeletonsCatalogo(contenedor, numSecciones = 3, numCards = 4) {
   if (!contenedor) return;
   contenedor.innerHTML = '';
 
@@ -90,7 +91,7 @@ export function renderizarSkeletonsCatalogo(contenedor, numSecciones = 3, numCar
 /**
  * Genera el estado de carga skeleton para la página de detalle del producto
  */
-export function renderizarSkeletonDetalle(contenedor) {
+function renderizarSkeletonDetalle(contenedor) {
   if (!contenedor) return;
   contenedor.innerHTML = `
     <div class="skeleton-product-hero">
@@ -112,7 +113,7 @@ export function renderizarSkeletonDetalle(contenedor) {
 /**
  * Renderiza una tarjeta de error de red con opción de reintento
  */
-export function crearTarjetaErrorRed({
+function crearTarjetaErrorRed({
   titulo = 'Error de Conexión con el Catálogo',
   mensaje = 'No pudimos obtener la información del servidor de RYA Tech. Verifica tu conexión a internet o reintenta.',
   onRetry = null,
@@ -159,4 +160,12 @@ export function crearTarjetaErrorRed({
   }
 
   return card;
+}
+
+if (typeof window !== 'undefined') {
+  window.inicializarMonitorDeRed = inicializarMonitorDeRed;
+  window.crearSkeletonCard = crearSkeletonCard;
+  window.renderizarSkeletonsCatalogo = renderizarSkeletonsCatalogo;
+  window.renderizarSkeletonDetalle = renderizarSkeletonDetalle;
+  window.crearTarjetaErrorRed = crearTarjetaErrorRed;
 }

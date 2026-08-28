@@ -1,7 +1,5 @@
-import { Cart, formatCurrency } from './cart.js';
-import { inicializarMonitorDeRed } from './network-ui.js';
-
 const ORDERS_STORAGE_KEY = 'rya_orders_v1';
+
 
 function generateUUID() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
@@ -1046,10 +1044,12 @@ class CheckoutPageController {
   }
 }
 
-export const CheckoutController = new CheckoutPageController();
+const CheckoutController = new CheckoutPageController();
 
-document.addEventListener('DOMContentLoaded', () => {
-  inicializarMonitorDeRed();
+function inicializarAppCheckout() {
+  if (typeof inicializarMonitorDeRed === 'function') inicializarMonitorDeRed();
+  if (window.Cart && window.Cart.init) window.Cart.init();
+  
   const searchInput = document.getElementById('headerSearchInput');
   searchInput?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && searchInput.value.trim()) {
@@ -1058,4 +1058,15 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   CheckoutController.init();
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', inicializarAppCheckout);
+} else {
+  inicializarAppCheckout();
+}
+
+if (typeof window !== 'undefined') {
+  window.CheckoutController = CheckoutController;
+}
+

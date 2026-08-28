@@ -1,38 +1,38 @@
-import { REGLAS_DE_DEPENDENCIA, FILTROS_GLOBALES, NOMBRES_LEGIBLES, JERARQUIA_CATEGORIAS } from './config.js';
-import { fetchProductos } from './data.js';
-
 let productosBase = []; 
-export let estado = {
+let estadoFiltros = {
   categoriaActual: null,
   filtrosSeleccionados: {}
 };
 
-const container = document.getElementById('dynamicFilterContainer');
-const filterCountLabel = document.getElementById('filterCount');
-
 function notificarCambioFiltros() {
-  window.dispatchEvent(new CustomEvent('filtrosActualizados', { detail: { ...estado } }));
+  window.dispatchEvent(new CustomEvent('filtrosActualizados', { detail: { ...estadoFiltros } }));
 }
 
-export function obtenerEstadoFiltros() {
-  return estado;
+function obtenerEstadoFiltros() {
+  return estadoFiltros;
 }
 
-export function resetearFiltros() {
-  estado.categoriaActual = null;
-  estado.filtrosSeleccionados = {};
+function resetearFiltros() {
+  estadoFiltros.categoriaActual = null;
+  estadoFiltros.filtrosSeleccionados = {};
   procesarFiltros();
   notificarCambioFiltros();
 }
 
-export async function inicializarFiltros() {
+async function inicializarFiltros() {
   try {
-    productosBase = await fetchProductos();
+    const fetchFn = (typeof window !== 'undefined' && window.fetchProductos)
+      ? window.fetchProductos
+      : (typeof fetchProductos !== 'undefined' ? fetchProductos : null);
+    
+    if (fetchFn) {
+      productosBase = await fetchFn();
+    }
     procesarFiltros();
     
     // Listener para limpiar filtros
     document.getElementById('btnClearFilters')?.addEventListener('click', () => {
-      estado.filtrosSeleccionados = {};
+      estadoFiltros.filtrosSeleccionados = {};
       procesarFiltros();
       notificarCambioFiltros();
     });
@@ -45,29 +45,34 @@ export async function inicializarFiltros() {
   }
 }
 
-export function cambiarCategoria(nuevaCategoria) {
-  estado.categoriaActual = nuevaCategoria;
-  estado.filtrosSeleccionados = {};
+function cambiarCategoria(nuevaCategoria) {
+  estadoFiltros.categoriaActual = nuevaCategoria;
+  estadoFiltros.filtrosSeleccionados = {};
   procesarFiltros();
   notificarCambioFiltros();
 }
 
 function procesarFiltros() {
-  if(!container) return;
-  if (!estado.categoriaActual) {
+  const container = document.getElementById('dynamicFilterContainer');
+  if (!container) return;
+  
+  if (!estadoFiltros.categoriaActual) {
     renderizarUI({});
     actualizarContadorGlobal();
     return;
   }
 
-  let productosCategoria = productosBase.filter(p => p.categoria === estado.categoriaActual);
-  const permitidos = [...FILTROS_GLOBALES, ...(REGLAS_DE_DEPENDENCIA[estado.categoriaActual]?.activa || [])];
+  const reglasDep = (typeof window !== 'undefined' && window.REGLAS_DE_DEPENDENCIA) ? window.REGLAS_DE_DEPENDENCIA : (typeof REGLAS_DE_DEPENDENCIA !== 'undefined' ? REGLAS_DE_DEPENDENCIA : {});
+  const filtrosGlob = (typeof window !== 'undefined' && window.FILTROS_GLOBALES) ? window.FILTROS_GLOBALES : (typeof FILTROS_GLOBALES !== 'undefined' ? FILTROS_GLOBALES : ["fabricante"]);
+
+  let productosCategoria = productosBase.filter(p => p.categoria === estadoFiltros.categoriaActual);
+  const permitidos = [...filtrosGlob, ...(reglasDep[estadoFiltros.categoriaActual]?.activa || [])];
 
   let productosFiltradosFinal = productosCategoria.filter(p => {
     let pasaFiltro = true;
-    for (const [clave, valores] of Object.entries(estado.filtrosSeleccionados)) {
-      if (valores.length === 0) continue;
-      const valorProducto = clave === 'fabricante' ? p[clave] : p.atributos[clave];
+    for (const [clave, valores] of Object.entries(estadoFiltros.filtrosSeleccionados)) {
+      if (!valores || valores.length === 0) continue;
+      const valorProducto = clave === 'fabricante' ? p[clave] : p.atributos?.[clave];
       if (!valores.includes(valorProducto)) {
         pasaFiltro = false;
         break;
@@ -81,7 +86,7 @@ function procesarFiltros() {
 
   productosFiltradosFinal.forEach(p => {
     permitidos.forEach(attr => {
-      const valor = attr === 'fabricante' ? p[attr] : p.atributos[attr];
+      const valor = attr === 'fabricante' ? p[attr] : p.atributos?.[attr];
       if (valor) {
         opcionesDisponibles[attr][valor] = (opcionesDisponibles[attr][valor] || 0) + 1;
       }
@@ -93,27 +98,32 @@ function procesarFiltros() {
 }
 
 function renderizarUI(opcionesDisponibles) {
+  const container = document.getElementById('dynamicFilterContainer');
+  if (!container) return;
   container.innerHTML = '';
 
+  const jerarquia = (typeof window !== 'undefined' && window.JERARQUIA_CATEGORIAS) ? window.JERARQUIA_CATEGORIAS : (typeof JERARQUIA_CATEGORIAS !== 'undefined' ? JERARQUIA_CATEGORIAS : {});
+  const nombresLeg = (typeof window !== 'undefined' && window.NOMBRES_LEGIBLES) ? window.NOMBRES_LEGIBLES : (typeof NOMBRES_LEGIBLES !== 'undefined' ? NOMBRES_LEGIBLES : {});
+
   // Botón para ver todas las categorías si hay una categoría activa
-  if (estado.categoriaActual) {
+  if (estadoFiltros.categoriaActual) {
     const allCatBtn = document.createElement('button');
     allCatBtn.type = 'button';
     allCatBtn.className = 'btn-all-categories';
     allCatBtn.style.cssText = 'width: 100%; background: rgba(0, 212, 255, 0.1); border: 1px solid var(--color-cyan); color: var(--color-cyan); padding: 8px 12px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; margin-bottom: 16px; text-align: center;';
-    allCatBtn.innerHTML = `← Ver todo el catálogo (${estado.categoriaActual} activo)`;
+    allCatBtn.innerHTML = `← Ver todo el catálogo (${estadoFiltros.categoriaActual} activo)`;
     allCatBtn.addEventListener('click', () => {
       cambiarCategoria(null);
     });
     container.appendChild(allCatBtn);
   }
 
-  for (const [macroCategoria, categorias] of Object.entries(JERARQUIA_CATEGORIAS)) {
+  for (const [macroCategoria, categorias] of Object.entries(jerarquia)) {
     const macroDetails = document.createElement('details');
     macroDetails.className = 'macro-category-group';
     macroDetails.style.marginBottom = '12px'; 
     
-    if (categorias.includes(estado.categoriaActual)) macroDetails.open = true;
+    if (categorias.includes(estadoFiltros.categoriaActual)) macroDetails.open = true;
 
     const macroSummary = document.createElement('summary');
     macroSummary.textContent = macroCategoria;
@@ -135,7 +145,7 @@ function renderizarUI(opcionesDisponibles) {
       catSummary.style.padding = '4px 0'; 
 
       catSummary.addEventListener('click', (e) => {
-        if (estado.categoriaActual !== catNombre) {
+        if (estadoFiltros.categoriaActual !== catNombre) {
           e.preventDefault();
           cambiarCategoria(catNombre);
         }
@@ -143,7 +153,7 @@ function renderizarUI(opcionesDisponibles) {
 
       catDetails.appendChild(catSummary);
 
-      if (estado.categoriaActual === catNombre) {
+      if (estadoFiltros.categoriaActual === catNombre) {
         catDetails.open = true; 
         catSummary.style.color = 'var(--color-cyan)';
         catSummary.style.fontWeight = 'bold';
@@ -160,7 +170,7 @@ function renderizarUI(opcionesDisponibles) {
           if (opcionesKeys.length === 0) return;
           opcionesKeys.sort((a, b) => opcionesMap[b] - opcionesMap[a]);
 
-          const titulo = NOMBRES_LEGIBLES[attrClave] || attrClave;
+          const titulo = nombresLeg[attrClave] || attrClave;
 
           const filterDetails = document.createElement('details');
           filterDetails.className = 'filter-group';
@@ -179,7 +189,7 @@ function renderizarUI(opcionesDisponibles) {
 
           opcionesKeys.forEach(valor => {
             const cantidad = opcionesMap[valor];
-            const isChecked = estado.filtrosSeleccionados[attrClave]?.includes(valor) || false;
+            const isChecked = estadoFiltros.filtrosSeleccionados[attrClave]?.includes(valor) || false;
 
             const label = document.createElement('label');
             label.style.display = 'block';
@@ -193,13 +203,13 @@ function renderizarUI(opcionesDisponibles) {
             checkbox.checked = isChecked;
 
             checkbox.addEventListener('change', (e) => {
-              if (!estado.filtrosSeleccionados[attrClave]) {
-                estado.filtrosSeleccionados[attrClave] = [];
+              if (!estadoFiltros.filtrosSeleccionados[attrClave]) {
+                estadoFiltros.filtrosSeleccionados[attrClave] = [];
               }
               if (e.target.checked) {
-                estado.filtrosSeleccionados[attrClave].push(valor);
+                estadoFiltros.filtrosSeleccionados[attrClave].push(valor);
               } else {
-                estado.filtrosSeleccionados[attrClave] = estado.filtrosSeleccionados[attrClave].filter(v => v !== valor);
+                estadoFiltros.filtrosSeleccionados[attrClave] = estadoFiltros.filtrosSeleccionados[attrClave].filter(v => v !== valor);
               }
               procesarFiltros();
               notificarCambioFiltros();
@@ -225,11 +235,20 @@ function renderizarUI(opcionesDisponibles) {
 }
 
 function actualizarContadorGlobal() {
+  const filterCountLabel = document.getElementById('filterCount');
   let totalSeleccionados = 0;
-  Object.values(estado.filtrosSeleccionados).forEach(arr => {
+  Object.values(estadoFiltros.filtrosSeleccionados).forEach(arr => {
     totalSeleccionados += arr.length;
   });
   if (filterCountLabel) {
     filterCountLabel.textContent = `(${totalSeleccionados})`;
   }
+}
+
+if (typeof window !== 'undefined') {
+  window.estado = estadoFiltros;
+  window.obtenerEstadoFiltros = obtenerEstadoFiltros;
+  window.resetearFiltros = resetearFiltros;
+  window.inicializarFiltros = inicializarFiltros;
+  window.cambiarCategoria = cambiarCategoria;
 }

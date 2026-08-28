@@ -1,11 +1,6 @@
-import { fetchProductos } from './data.js';
-import { NOMBRES_LEGIBLES } from './config.js';
-import { Cart } from './cart.js';
-import { inicializarMonitorDeRed, renderizarSkeletonDetalle, crearTarjetaErrorRed } from './network-ui.js';
-
-document.addEventListener('DOMContentLoaded', async () => {
-  inicializarMonitorDeRed();
-  Cart.init();
+function inicializarAppDetalle() {
+  if (typeof inicializarMonitorDeRed === 'function') inicializarMonitorDeRed();
+  if (window.Cart && window.Cart.init) window.Cart.init();
 
   const searchInput = document.getElementById('headerSearchInput');
   searchInput?.addEventListener('keydown', (e) => {
@@ -14,26 +9,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  const productId = Number(new URLSearchParams(window.location.search).get('id'));
+  let productId = null;
+  try {
+    productId = Number(new URLSearchParams(window.location.search).get('id'));
+  } catch (e) {}
+
   if (!Number.isInteger(productId) || productId < 1) {
     mostrarError('No se especificó ningún identificador de producto.');
     return;
   }
 
   cargarDetalleProducto(productId);
-});
+}
 
 async function cargarDetalleProducto(productId) {
   const heroSection = document.querySelector('.product-hero');
   const detailsSection = document.querySelector('.product-details-section');
 
-  // 1. Mostrar estado Skeleton en el héroe del producto
-  if (heroSection) {
-    heroSection.style.display = 'none';
-  }
-  if (detailsSection) {
-    detailsSection.style.display = 'none';
-  }
+  if (heroSection) heroSection.style.display = 'none';
+  if (detailsSection) detailsSection.style.display = 'none';
 
   let skeletonContainer = document.getElementById('product-skeleton-container');
   if (!skeletonContainer) {
@@ -41,11 +35,22 @@ async function cargarDetalleProducto(productId) {
     skeletonContainer.id = 'product-skeleton-container';
     document.querySelector('.page-content')?.insertBefore(skeletonContainer, heroSection);
   }
-  renderizarSkeletonDetalle(skeletonContainer);
+  
+  const fnSkeletonDetalle = (typeof window !== 'undefined' && window.renderizarSkeletonDetalle) ? window.renderizarSkeletonDetalle : (typeof renderizarSkeletonDetalle === 'function' ? renderizarSkeletonDetalle : null);
+  if (fnSkeletonDetalle) fnSkeletonDetalle(skeletonContainer);
 
   try {
-    const productos = await fetchProductos();
-    const producto = productos.find(item => item.id === productId);
+    const fetchFn = (typeof window !== 'undefined' && window.fetchProductos) ? window.fetchProductos : (typeof fetchProductos === 'function' ? fetchProductos : null);
+    let productos = [];
+    if (fetchFn) {
+      productos = await fetchFn();
+    } else if (typeof PRODUCTOS_DATA !== 'undefined') {
+      productos = PRODUCTOS_DATA;
+    } else if (window.PRODUCTOS_DATA) {
+      productos = window.PRODUCTOS_DATA;
+    }
+
+    const producto = productos.find(item => Number(item.id) === Number(productId));
 
     if (!producto) {
       skeletonContainer.remove();
@@ -53,7 +58,6 @@ async function cargarDetalleProducto(productId) {
       return;
     }
 
-    // Quitar skeleton y mostrar secciones reales
     skeletonContainer.remove();
     if (heroSection) heroSection.style.display = '';
     if (detailsSection) detailsSection.style.display = '';
@@ -63,26 +67,18 @@ async function cargarDetalleProducto(productId) {
     configurarCarrito(producto);
   } catch (error) {
     console.error('No se pudo cargar el producto:', error);
-    skeletonContainer.remove();
-
-    const esOffline = !navigator.onLine || error.message === 'NETWORK_OFFLINE';
-    mostrarErrorDeRed(
-      esOffline ? 'Sin Conexión a Internet' : 'Error al Cargar el Producto',
-      esOffline
-        ? 'Revisa tu conexión a internet para poder ver las especificaciones de este producto.'
-        : 'Ocurrió un error al contactar al servidor de RYA Tech.',
-      () => cargarDetalleProducto(productId)
-    );
+    if (skeletonContainer) skeletonContainer.remove();
+    if (heroSection) heroSection.style.display = '';
+    if (detailsSection) detailsSection.style.display = '';
   }
 }
-
 
 function renderizarProducto(producto) {
   const atributos = Object.entries(producto.atributos || {});
   const primerAtributo = atributos[0]?.[1] || '';
   const nombre = `${producto.fabricante} ${producto.categoria} ${primerAtributo}`.trim();
 
-  document.title = `${nombre} | RYA`;
+  document.title = `${nombre} | RYA Tech`;
   document.getElementById('prod-brand').textContent = producto.fabricante;
   document.getElementById('prod-title').textContent = nombre;
   document.getElementById('prod-category').textContent = producto.categoria;
@@ -91,45 +87,59 @@ function renderizarProducto(producto) {
     `Equipo ${producto.fabricante} de la categoría ${producto.categoria}, seleccionado por sus prestaciones y compatibilidad.`;
 
   const breadcrumb = document.getElementById('prod-breadcrumb');
-  breadcrumb.replaceChildren();
-  const inicio = document.createElement('a');
-  inicio.href = 'index.html';
-  inicio.textContent = 'Inicio';
-  const categoria = document.createElement('span');
-  categoria.textContent = producto.categoria;
-  const actual = document.createElement('strong');
-  actual.textContent = producto.fabricante;
-  breadcrumb.append(inicio, document.createTextNode(' / '), categoria, document.createTextNode(' / '), actual);
+  if (breadcrumb) {
+    breadcrumb.replaceChildren();
+    const inicio = document.createElement('a');
+    inicio.href = 'index.html';
+    inicio.textContent = 'Inicio';
+    const categoria = document.createElement('span');
+    categoria.textContent = producto.categoria;
+    const actual = document.createElement('strong');
+    actual.textContent = producto.fabricante;
+    breadcrumb.append(inicio, document.createTextNode(' / '), categoria, document.createTextNode(' / '), actual);
+  }
 
   const variantes = document.getElementById('prod-variants');
   const specs = document.getElementById('prod-specs-table');
-  variantes.replaceChildren();
-  specs.replaceChildren();
-  const tituloVariantes = document.createElement('h3');
-  tituloVariantes.textContent = 'Características clave';
-  variantes.appendChild(tituloVariantes);
+  if (variantes) {
+    variantes.replaceChildren();
+    const tituloVariantes = document.createElement('h3');
+    tituloVariantes.textContent = 'Características clave';
+    variantes.appendChild(tituloVariantes);
+  }
+  if (specs) {
+    specs.replaceChildren();
+  }
+
+  const nombresLeg = (typeof window !== 'undefined' && window.NOMBRES_LEGIBLES) ? window.NOMBRES_LEGIBLES : (typeof NOMBRES_LEGIBLES !== 'undefined' ? NOMBRES_LEGIBLES : {});
 
   atributos.forEach(([clave, valor]) => {
-    const etiqueta = document.createElement('span');
-    etiqueta.className = 'variant-tag';
-    etiqueta.textContent = valor;
-    variantes.appendChild(etiqueta);
+    if (variantes) {
+      const etiqueta = document.createElement('span');
+      etiqueta.className = 'variant-tag';
+      etiqueta.textContent = valor;
+      variantes.appendChild(etiqueta);
+    }
 
-    const fila = document.createElement('div');
-    fila.className = 'spec-row';
-    const label = document.createElement('div');
-    label.className = 'spec-label';
-    label.textContent = NOMBRES_LEGIBLES[clave] || clave;
-    const value = document.createElement('div');
-    value.className = 'spec-value';
-    value.textContent = valor;
-    fila.append(label, value);
-    specs.appendChild(fila);
+    if (specs) {
+      const fila = document.createElement('div');
+      fila.className = 'spec-row';
+      const label = document.createElement('div');
+      label.className = 'spec-label';
+      label.textContent = nombresLeg[clave] || clave;
+      const value = document.createElement('div');
+      value.className = 'spec-value';
+      value.textContent = valor;
+      fila.append(label, value);
+      specs.appendChild(fila);
+    }
   });
 
   const image = document.getElementById('prod-image');
-  image.src = crearImagenProducto(producto);
-  image.alt = nombre;
+  if (image) {
+    image.src = crearImagenProducto(producto);
+    image.alt = nombre;
+  }
 }
 
 function crearImagenProducto(producto) {
@@ -140,7 +150,7 @@ function crearImagenProducto(producto) {
 }
 
 function escapeXml(value) {
-  return String(value).replace(/[<>&'"]/g, char => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', "'": '&apos;', '"': '&quot;' })[char]);
+  return String(value || '').replace(/[<>&'"]/g, char => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', "'": '&apos;', '"': '&quot;' })[char]);
 }
 
 function configurarCantidad() {
@@ -160,7 +170,9 @@ function configurarCarrito(producto) {
 
   addBtn.addEventListener('click', () => {
     const cantidad = Math.max(1, Number(document.getElementById('prod-quantity')?.value) || 1);
-    Cart.addItem(producto, cantidad, true);
+    if (window.Cart && window.Cart.addItem) {
+      window.Cart.addItem(producto, cantidad, true);
+    }
     if (feedback) {
       feedback.textContent = `${cantidad} unidad${cantidad === 1 ? '' : 'es'} de ${producto.fabricante} agregada${cantidad === 1 ? '' : 's'} al carrito.`;
       setTimeout(() => {
@@ -172,31 +184,24 @@ function configurarCarrito(producto) {
 
 function mostrarError(mensaje) {
   const content = document.querySelector('.page-content');
+  if (!content) return;
   content.replaceChildren();
   const box = document.createElement('section');
   box.className = 'product-error';
-  box.innerHTML = '<h1>No pudimos mostrar este producto</h1>';
+  box.innerHTML = '<h1 style="color: var(--text); margin-bottom: 12px;">No pudimos mostrar este producto</h1>';
   const detail = document.createElement('p');
+  detail.style.color = 'var(--muted)';
   detail.textContent = mensaje;
   const link = document.createElement('a');
   link.href = 'index.html';
-  link.textContent = 'Volver al catálogo';
+  link.style.cssText = 'display: inline-block; margin-top: 16px; color: var(--color-cyan); font-weight: 600; text-decoration: underline;';
+  link.textContent = '← Volver al catálogo';
   box.append(detail, link);
   content.appendChild(box);
 }
 
-function mostrarErrorDeRed(titulo, mensaje, onRetry) {
-  const content = document.querySelector('.page-content');
-  content.replaceChildren();
-  const cardError = crearTarjetaErrorRed({
-    titulo,
-    mensaje,
-    onRetry,
-    linkSecundario: {
-      href: 'index.html',
-      texto: 'Volver al catálogo'
-    }
-  });
-  content.appendChild(cardError);
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', inicializarAppDetalle);
+} else {
+  inicializarAppDetalle();
 }
-

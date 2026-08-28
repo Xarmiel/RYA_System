@@ -1,17 +1,16 @@
-import { fetchProductos } from './data.js';
-
 const STORAGE_KEY = 'rya_cart_v1';
 const ORDERS_STORAGE_KEY = 'rya_orders_v1';
 
 /**
  * Formatea un monto numérico en formato de moneda peruana (S/ 1,250.00).
  */
-export function formatCurrency(amount) {
+function formatCurrency(amount) {
   return `S/ ${Number(amount || 0).toLocaleString('es-PE', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   })}`;
 }
+
 
 /**
  * Genera el SVG/data-URI para la miniatura del producto si no tiene imagen fija.
@@ -185,7 +184,10 @@ class CartManager {
    */
   async addItemById(productId, quantity = 1, openDrawerImmediately = true) {
     try {
-      const productos = await fetchProductos();
+      const fetchFn = (typeof window !== 'undefined' && window.fetchProductos)
+        ? window.fetchProductos
+        : (typeof fetchProductos !== 'undefined' ? fetchProductos : null);
+      const productos = fetchFn ? await fetchFn() : [];
       const product = productos.find(p => p.id === Number(productId));
       if (product) {
         this.addItem(product, quantity, openDrawerImmediately);
@@ -1613,8 +1615,8 @@ class CartManager {
   }
 }
 
-// Instancia singleton global exportable
-export const Cart = new CartManager();
+// Instancia singleton global
+const Cart = new CartManager();
 
 // Inicialización automática cuando el DOM está listo
 if (typeof document !== 'undefined') {
@@ -1625,8 +1627,10 @@ if (typeof document !== 'undefined') {
   }
 }
 
-// Exponer en window para llamadas inline como onclick="agregarAlCarrito(id)"
+// Exponer en window para llamadas globales e inline como onclick="agregarAlCarrito(id)"
 if (typeof window !== 'undefined') {
   window.Cart = Cart;
+  window.formatCurrency = formatCurrency;
   window.agregarAlCarrito = (id) => Cart.addItemById(id);
 }
+

@@ -145,19 +145,19 @@ const PRODUCTOS_DATA = [
 ];
 
 /**
- * Simula una llamada asíncrona a la API REST de productos con retardo de red (400ms)
- * y validación de conectividad.
+ * Obtiene la lista completa de productos del catálogo de RYA Tech.
+ * Compatible con todos los navegadores (Chrome, Edge, Firefox, Brave, Safari).
  */
-export async function fetchProductos(simularLatencia = true) {
-  // 1. Detección de estado de red offline
-  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-    throw new Error('NETWORK_OFFLINE');
-  }
-
-  // 2. Simulación de latencia de red para mostrar animaciones Skeleton
+async function fetchProductos(simularLatencia = false) {
   if (simularLatencia) {
-    await new Promise(resolve => setTimeout(resolve, 400));
+    await new Promise(resolve => setTimeout(resolve, 80));
   }
-
   return [...PRODUCTOS_DATA];
-}
+}
+
+// Exportación global universal
+if (typeof window !== 'undefined') {
+  window.PRODUCTOS_DATA = PRODUCTOS_DATA;
+  window.fetchProductos = fetchProductos;
+}
+
