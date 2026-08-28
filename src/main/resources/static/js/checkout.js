@@ -40,10 +40,12 @@ class CheckoutPageController {
       },
       entrega: {
         metodo: 'domicilio',
-        departamento: 'Lima',
+        departamento: 'Ica',
+        ciudad: 'Ica',
         direccion: '',
         referencia: '',
-        titularRetiro: ''
+        titularRetiroNombre: '',
+        titularRetiroDni: ''
       },
       pago: {
         metodo: 'yape',
@@ -209,6 +211,16 @@ class CheckoutPageController {
   renderStep1(container) {
     const c = this.checkoutData.cliente;
 
+    let docPlaceholder = 'Ej: 72345678';
+    let docMaxLen = 8;
+    if (c.tipoDoc === 'RUC') {
+      docPlaceholder = 'Ej: 20608945123';
+      docMaxLen = 11;
+    } else if (c.tipoDoc === 'CE') {
+      docPlaceholder = 'Ej: 001234567';
+      docMaxLen = 12;
+    }
+
     container.innerHTML = `
       <div>
         <h3 class="checkout-section-subtitle">1. Datos del Cliente</h3>
@@ -227,7 +239,7 @@ class CheckoutPageController {
 
         <div class="checkout-form-group">
           <label class="checkout-label" for="step1-num-doc">Número de Documento *</label>
-          <input type="text" id="step1-num-doc" class="checkout-input" placeholder="Ej: 72345678" value="${c.numDoc}">
+          <input type="text" id="step1-num-doc" class="checkout-input" placeholder="${docPlaceholder}" maxlength="${docMaxLen}" value="${c.numDoc}">
           <span class="checkout-error-msg" id="err-step1-num-doc"></span>
         </div>
 
@@ -244,8 +256,8 @@ class CheckoutPageController {
         </div>
 
         <div class="checkout-form-group">
-          <label class="checkout-label" for="step1-telefono">Teléfono / WhatsApp *</label>
-          <input type="tel" id="step1-telefono" class="checkout-input" placeholder="Ej: 987654321" value="${c.telefono}">
+          <label class="checkout-label" for="step1-telefono">Teléfono / Celular (9 dígitos) *</label>
+          <input type="tel" id="step1-telefono" class="checkout-input" placeholder="Ej: 987654321" maxlength="9" value="${c.telefono}">
           <span class="checkout-error-msg" id="err-step1-telefono"></span>
         </div>
       </div>
@@ -255,6 +267,45 @@ class CheckoutPageController {
         <button class="btn-checkout-next" id="btn-goto-step2">Continuar a Entrega →</button>
       </div>
     `;
+
+    const tipoDocSelect = document.getElementById('step1-tipo-doc');
+    const numDocInput = document.getElementById('step1-num-doc');
+    const telInput = document.getElementById('step1-telefono');
+
+    tipoDocSelect?.addEventListener('change', (e) => {
+      const selectedType = e.target.value;
+      if (selectedType === 'DNI') {
+        numDocInput.placeholder = 'Ej: 72345678';
+        numDocInput.maxLength = 8;
+        numDocInput.value = numDocInput.value.replace(/\D/g, '').slice(0, 8);
+      } else if (selectedType === 'RUC') {
+        numDocInput.placeholder = 'Ej: 20608945123';
+        numDocInput.maxLength = 11;
+        numDocInput.value = numDocInput.value.replace(/\D/g, '').slice(0, 11);
+      } else {
+        numDocInput.placeholder = 'Ej: 001234567';
+        numDocInput.maxLength = 12;
+        numDocInput.value = numDocInput.value.replace(/[^a-zA-Z0-9]/g, '').slice(0, 12);
+      }
+      const errNum = document.getElementById('err-step1-num-doc');
+      if (errNum) errNum.textContent = '';
+      numDocInput.classList.remove('has-error');
+    });
+
+    numDocInput?.addEventListener('input', (e) => {
+      const selectedType = tipoDocSelect?.value || 'DNI';
+      if (selectedType === 'DNI') {
+        e.target.value = e.target.value.replace(/\D/g, '').slice(0, 8);
+      } else if (selectedType === 'RUC') {
+        e.target.value = e.target.value.replace(/\D/g, '').slice(0, 11);
+      } else {
+        e.target.value = e.target.value.replace(/[^a-zA-Z0-9]/g, '').slice(0, 12);
+      }
+    });
+
+    telInput?.addEventListener('input', (e) => {
+      e.target.value = e.target.value.replace(/\D/g, '').slice(0, 9);
+    });
 
     document.getElementById('btn-goto-step2').onclick = () => {
       if (this.validateStep1()) {
@@ -280,17 +331,38 @@ class CheckoutPageController {
     const errEma = document.getElementById('err-step1-email');
     const errTel = document.getElementById('err-step1-telefono');
 
-    if (!numDoc || numDoc.length < 6) {
-      errNum.textContent = 'Ingresa un número de documento válido.';
-      document.getElementById('step1-num-doc')?.classList.add('has-error');
-      isValid = false;
+    // Validación DNI (8 dígitos) / RUC (11 dígitos) / CE
+    if (tipoDoc === 'DNI') {
+      if (!numDoc || !/^\d{8}$/.test(numDoc)) {
+        errNum.textContent = 'El DNI debe contener exactamente 8 números.';
+        document.getElementById('step1-num-doc')?.classList.add('has-error');
+        isValid = false;
+      } else {
+        errNum.textContent = '';
+        document.getElementById('step1-num-doc')?.classList.remove('has-error');
+      }
+    } else if (tipoDoc === 'RUC') {
+      if (!numDoc || !/^\d{11}$/.test(numDoc)) {
+        errNum.textContent = 'El RUC debe contener exactamente 11 números.';
+        document.getElementById('step1-num-doc')?.classList.add('has-error');
+        isValid = false;
+      } else {
+        errNum.textContent = '';
+        document.getElementById('step1-num-doc')?.classList.remove('has-error');
+      }
     } else {
-      errNum.textContent = '';
-      document.getElementById('step1-num-doc')?.classList.remove('has-error');
+      if (!numDoc || numDoc.length < 6 || numDoc.length > 12) {
+        errNum.textContent = 'Ingresa un carné de extranjería válido (6 a 12 caracteres).';
+        document.getElementById('step1-num-doc')?.classList.add('has-error');
+        isValid = false;
+      } else {
+        errNum.textContent = '';
+        document.getElementById('step1-num-doc')?.classList.remove('has-error');
+      }
     }
 
     if (!nombre || nombre.length < 3) {
-      errNom.textContent = 'El nombre completo es obligatorio.';
+      errNom.textContent = 'El nombre completo o razón social es obligatorio.';
       document.getElementById('step1-nombre')?.classList.add('has-error');
       isValid = false;
     } else {
@@ -298,9 +370,10 @@ class CheckoutPageController {
       document.getElementById('step1-nombre')?.classList.remove('has-error');
     }
 
+    // Validación estricta de correo electrónico: obligatorio que contenga @ y dominio válido
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!email || !emailRegex.test(email)) {
-      errEma.textContent = 'Ingresa un correo electrónico válido.';
+    if (!email || !email.includes('@') || !emailRegex.test(email)) {
+      errEma.textContent = 'Ingresa un correo electrónico válido que incluya "@" y dominio (ej: usuario@correo.com).';
       document.getElementById('step1-email')?.classList.add('has-error');
       isValid = false;
     } else {
@@ -308,8 +381,9 @@ class CheckoutPageController {
       document.getElementById('step1-email')?.classList.remove('has-error');
     }
 
-    if (!telefono || telefono.length < 7) {
-      errTel.textContent = 'Ingresa un número de teléfono o celular válido.';
+    // Validación de teléfono (exactamente 9 números)
+    if (!telefono || !/^\d{9}$/.test(telefono)) {
+      errTel.textContent = 'El teléfono debe contener exactamente 9 números.';
       document.getElementById('step1-telefono')?.classList.add('has-error');
       isValid = false;
     } else {
@@ -338,7 +412,7 @@ class CheckoutPageController {
             <span class="option-card-title">Despacho a Domicilio</span>
             <span class="option-card-badge">Envío Gratis</span>
           </div>
-          <p class="option-card-desc">Entrega a domicilio en Lima y provincias con embalaje de seguridad.</p>
+          <p class="option-card-desc">Entrega a domicilio en Ica, Lima y todas las provincias con embalaje de seguridad.</p>
         </div>
 
         <div class="checkout-option-card ${e.metodo === 'tienda' ? 'is-selected' : ''}" data-delivery="tienda">
@@ -360,18 +434,7 @@ class CheckoutPageController {
       </div>
     `;
 
-    const cards = container.querySelectorAll('[data-delivery]');
-    cards.forEach(card => {
-      card.onclick = () => {
-        cards.forEach(c => c.classList.remove('is-selected'));
-        card.classList.add('is-selected');
-        this.checkoutData.entrega.metodo = card.dataset.delivery;
-        const extraContainer = document.getElementById('page-delivery-extra-fields');
-        if (extraContainer) {
-          extraContainer.innerHTML = this.getDeliveryFieldsHTML(this.checkoutData.entrega);
-        }
-      };
-    });
+    this.bindDeliveryEvents(container);
 
     document.getElementById('btn-back-to-step1').onclick = () => {
       this.currentStep = 1;
@@ -388,21 +451,60 @@ class CheckoutPageController {
     };
   }
 
+  bindDeliveryEvents(container) {
+    const cards = container.querySelectorAll('[data-delivery]');
+    cards.forEach(card => {
+      card.onclick = () => {
+        cards.forEach(c => c.classList.remove('is-selected'));
+        card.classList.add('is-selected');
+        this.checkoutData.entrega.metodo = card.dataset.delivery;
+        const extraContainer = document.getElementById('page-delivery-extra-fields');
+        if (extraContainer) {
+          extraContainer.innerHTML = this.getDeliveryFieldsHTML(this.checkoutData.entrega);
+          this.bindDeliveryInputRestrictions();
+        }
+      };
+    });
+    this.bindDeliveryInputRestrictions();
+  }
+
+  bindDeliveryInputRestrictions() {
+    const dniRetiroInput = document.getElementById('step2-retiro-dni');
+    dniRetiroInput?.addEventListener('input', (ev) => {
+      ev.target.value = ev.target.value.replace(/\D/g, '').slice(0, 8);
+    });
+  }
+
   getDeliveryFieldsHTML(e) {
     if (e.metodo === 'domicilio') {
+      const dep = e.departamento || 'Ica';
+      const city = e.ciudad || 'Ica';
       return `
         <div class="checkout-form-grid" style="margin-top: 14px;">
           <div class="checkout-form-group">
-            <label class="checkout-label" for="step2-departamento">Departamento / Ciudad *</label>
+            <label class="checkout-label" for="step2-departamento">Departamento *</label>
             <select id="step2-departamento" class="checkout-select">
-              <option value="Lima" ${e.departamento === 'Lima' ? 'selected' : ''}>Lima Metropolitana</option>
-              <option value="Callao" ${e.departamento === 'Callao' ? 'selected' : ''}>Callao</option>
-              <option value="Arequipa" ${e.departamento === 'Arequipa' ? 'selected' : ''}>Arequipa</option>
-              <option value="Trujillo" ${e.departamento === 'Trujillo' ? 'selected' : ''}>Trujillo (La Libertad)</option>
-              <option value="Cusco" ${e.departamento === 'Cusco' ? 'selected' : ''}>Cusco</option>
-              <option value="Chiclayo" ${e.departamento === 'Chiclayo' ? 'selected' : ''}>Chiclayo (Lambayeque)</option>
-              <option value="Piura" ${e.departamento === 'Piura' ? 'selected' : ''}>Piura</option>
+              <option value="Ica" ${dep === 'Ica' ? 'selected' : ''}>Ica</option>
+              <option value="Lima" ${dep === 'Lima' ? 'selected' : ''}>Lima Metropolitana</option>
+              <option value="Callao" ${dep === 'Callao' ? 'selected' : ''}>Callao</option>
+              <option value="Arequipa" ${dep === 'Arequipa' ? 'selected' : ''}>Arequipa</option>
+              <option value="Trujillo" ${dep === 'Trujillo' ? 'selected' : ''}>Trujillo (La Libertad)</option>
+              <option value="Cusco" ${dep === 'Cusco' ? 'selected' : ''}>Cusco</option>
+              <option value="Chiclayo" ${dep === 'Chiclayo' ? 'selected' : ''}>Chiclayo (Lambayeque)</option>
+              <option value="Piura" ${dep === 'Piura' ? 'selected' : ''}>Piura</option>
+              <option value="Ancash" ${dep === 'Ancash' ? 'selected' : ''}>Áncash</option>
+              <option value="Junin" ${dep === 'Junin' ? 'selected' : ''}>Junín</option>
+              <option value="Tacna" ${dep === 'Tacna' ? 'selected' : ''}>Tacna</option>
+              <option value="San Martin" ${dep === 'San Martin' ? 'selected' : ''}>San Martín</option>
+              <option value="Loreto" ${dep === 'Loreto' ? 'selected' : ''}>Loreto</option>
+              <option value="Otros" ${dep === 'Otros' ? 'selected' : ''}>Otro Departamento</option>
             </select>
+          </div>
+
+          <div class="checkout-form-group">
+            <label class="checkout-label" for="step2-ciudad">Ciudad / Provincia / Distrito *</label>
+            <input type="text" id="step2-ciudad" class="checkout-input" placeholder="Ej: Ica Centro / Chincha / Pisco" value="${city}">
+            <span class="checkout-error-msg" id="err-step2-ciudad"></span>
           </div>
 
           <div class="checkout-form-group">
@@ -410,7 +512,7 @@ class CheckoutPageController {
             <input type="text" id="step2-referencia" class="checkout-input" placeholder="Ej: Frente al parque / Dpto 402" value="${e.referencia || ''}">
           </div>
 
-          <div class="checkout-form-group full-width">
+          <div class="checkout-form-group">
             <label class="checkout-label" for="step2-direccion">Dirección Exacta de Entrega *</label>
             <input type="text" id="step2-direccion" class="checkout-input" placeholder="Av. / Jr. / Calle y Número" value="${e.direccion || ''}">
             <span class="checkout-error-msg" id="err-step2-direccion"></span>
@@ -425,9 +527,19 @@ class CheckoutPageController {
             <p style="font-size:12px; color:var(--muted); margin-top:3px;">Av. Garcilaso de la Vega 1348, Piso 2, Tienda 204, Cercado de Lima.</p>
             <p style="font-size:12px; color:var(--color-cyan); margin-top:4px;">Horario de atención: Lun a Sáb de 9:00 a. m. a 7:00 p. m.</p>
           </div>
-          <div class="checkout-form-group" style="margin-top:8px;">
-            <label class="checkout-label" for="step2-titular-retiro">Persona autorizada para recoger (Nombre y DNI)</label>
-            <input type="text" id="step2-titular-retiro" class="checkout-input" placeholder="Dejar en blanco si recoge el titular de compra" value="${e.titularRetiro || ''}">
+          
+          <div class="checkout-form-grid" style="margin-top: 8px;">
+            <div class="checkout-form-group">
+              <label class="checkout-label" for="step2-retiro-nombre">Persona autorizada (Nombre y Apellidos)</label>
+              <input type="text" id="step2-retiro-nombre" class="checkout-input" placeholder="Dejar en blanco si recoge el titular" value="${e.titularRetiroNombre || ''}">
+              <span class="checkout-error-msg" id="err-step2-retiro-nombre"></span>
+            </div>
+
+            <div class="checkout-form-group">
+              <label class="checkout-label" for="step2-retiro-dni">DNI de persona autorizada (8 dígitos)</label>
+              <input type="text" id="step2-retiro-dni" class="checkout-input" placeholder="Ej: 72345678" maxlength="8" value="${e.titularRetiroDni || ''}">
+              <span class="checkout-error-msg" id="err-step2-retiro-dni"></span>
+            </div>
           </div>
         </div>
       `;
@@ -436,29 +548,57 @@ class CheckoutPageController {
 
   validateStep2() {
     if (this.checkoutData.entrega.metodo === 'domicilio') {
-      const departamento = document.getElementById('step2-departamento')?.value || 'Lima';
+      const departamento = document.getElementById('step2-departamento')?.value || 'Ica';
+      const ciudad = document.getElementById('step2-ciudad')?.value.trim();
       const direccion = document.getElementById('step2-direccion')?.value.trim();
       const referencia = document.getElementById('step2-referencia')?.value.trim() || '';
 
       this.checkoutData.entrega.departamento = departamento;
+      this.checkoutData.entrega.ciudad = ciudad;
       this.checkoutData.entrega.direccion = direccion;
       this.checkoutData.entrega.referencia = referencia;
 
+      let isValid = true;
+      const errCiudad = document.getElementById('err-step2-ciudad');
       const errDir = document.getElementById('err-step2-direccion');
+
+      if (!ciudad || ciudad.length < 2) {
+        if (errCiudad) errCiudad.textContent = 'Por favor ingresa la ciudad o distrito de entrega.';
+        document.getElementById('step2-ciudad')?.classList.add('has-error');
+        isValid = false;
+      } else {
+        if (errCiudad) errCiudad.textContent = '';
+        document.getElementById('step2-ciudad')?.classList.remove('has-error');
+      }
+
       if (!direccion || direccion.length < 5) {
-        errDir.textContent = 'Por favor ingresa una dirección completa de entrega.';
+        if (errDir) errDir.textContent = 'Por favor ingresa una dirección completa de entrega.';
         document.getElementById('step2-direccion')?.classList.add('has-error');
+        isValid = false;
+      } else {
+        if (errDir) errDir.textContent = '';
+        document.getElementById('step2-direccion')?.classList.remove('has-error');
+      }
+
+      return isValid;
+    } else {
+      const titularRetiroNombre = document.getElementById('step2-retiro-nombre')?.value.trim() || '';
+      const titularRetiroDni = document.getElementById('step2-retiro-dni')?.value.trim() || '';
+      
+      this.checkoutData.entrega.titularRetiroNombre = titularRetiroNombre;
+      this.checkoutData.entrega.titularRetiroDni = titularRetiroDni;
+      this.checkoutData.entrega.direccion = 'Sede Central RYA Tech (Av. Garcilaso de la Vega 1348, Lima)';
+
+      const errRetiroDni = document.getElementById('err-step2-retiro-dni');
+      if (titularRetiroDni && !/^\d{8}$/.test(titularRetiroDni)) {
+        if (errRetiroDni) errRetiroDni.textContent = 'El DNI de la persona autorizada debe tener 8 números.';
+        document.getElementById('step2-retiro-dni')?.classList.add('has-error');
         return false;
       } else {
-        errDir.textContent = '';
-        document.getElementById('step2-direccion')?.classList.remove('has-error');
+        if (errRetiroDni) errRetiroDni.textContent = '';
+        document.getElementById('step2-retiro-dni')?.classList.remove('has-error');
         return true;
       }
-    } else {
-      const titularRetiro = document.getElementById('step2-titular-retiro')?.value.trim() || '';
-      this.checkoutData.entrega.titularRetiro = titularRetiro;
-      this.checkoutData.entrega.direccion = 'Sede Central RYA Tech (Av. Garcilaso de la Vega 1348, Lima)';
-      return true;
     }
   }
 
@@ -512,18 +652,7 @@ class CheckoutPageController {
       </div>
     `;
 
-    const cards = container.querySelectorAll('[data-payment]');
-    cards.forEach(card => {
-      card.onclick = () => {
-        cards.forEach(c => c.classList.remove('is-selected'));
-        card.classList.add('is-selected');
-        this.checkoutData.pago.metodo = card.dataset.payment;
-        const detailsContainer = document.getElementById('page-payment-details-box');
-        if (detailsContainer) {
-          detailsContainer.innerHTML = this.getPaymentFieldsHTML(this.checkoutData.pago, totals);
-        }
-      };
-    });
+    this.bindPaymentEvents(container, totals);
 
     document.getElementById('btn-back-to-step2').onclick = () => {
       this.currentStep = 2;
@@ -536,6 +665,58 @@ class CheckoutPageController {
         this.processOrder(totals);
       }
     };
+  }
+
+  bindPaymentEvents(container, totals) {
+    const cards = container.querySelectorAll('[data-payment]');
+    cards.forEach(card => {
+      card.onclick = () => {
+        cards.forEach(c => c.classList.remove('is-selected'));
+        card.classList.add('is-selected');
+        this.checkoutData.pago.metodo = card.dataset.payment;
+        const detailsContainer = document.getElementById('page-payment-details-box');
+        if (detailsContainer) {
+          detailsContainer.innerHTML = this.getPaymentFieldsHTML(this.checkoutData.pago, totals);
+          this.bindPaymentInputRestrictions();
+        }
+      };
+    });
+    this.bindPaymentInputRestrictions();
+  }
+
+  bindPaymentInputRestrictions() {
+    const metodo = this.checkoutData.pago.metodo;
+    if (metodo === 'tarjeta') {
+      const cardNumInput = document.getElementById('step3-card-number');
+      const cardExpInput = document.getElementById('step3-card-exp');
+      const cardCvvInput = document.getElementById('step3-card-cvv');
+
+      // Limitar número de tarjeta estrictamente a 16 dígitos numéricos
+      cardNumInput?.addEventListener('input', (e) => {
+        e.target.value = e.target.value.replace(/\D/g, '').slice(0, 16);
+      });
+
+      // Formato automático de vencimiento MM/AA con / automático tras mes
+      cardExpInput?.addEventListener('input', (e) => {
+        let val = e.target.value.replace(/\D/g, '').slice(0, 4);
+        if (val.length >= 2) {
+          e.target.value = val.slice(0, 2) + '/' + val.slice(2);
+        } else {
+          e.target.value = val;
+        }
+      });
+
+      // Limitar CVV solo a 3 dígitos numéricos
+      cardCvvInput?.addEventListener('input', (e) => {
+        e.target.value = e.target.value.replace(/\D/g, '').slice(0, 3);
+      });
+    } else {
+      // Código de operación: solo números (6 a 10 dígitos)
+      const opInput = document.getElementById('step3-numero-op');
+      opInput?.addEventListener('input', (e) => {
+        e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10);
+      });
+    }
   }
 
   getPaymentFieldsHTML(p, totals) {
@@ -570,8 +751,8 @@ class CheckoutPageController {
             </div>
           </div>
           <div class="checkout-form-group">
-            <label class="checkout-label" for="step3-numero-op">Número de Operación / Teléfono emisor *</label>
-            <input type="text" id="step3-numero-op" class="checkout-input" placeholder="Ej: OP-839201 o 987654321" value="${p.numeroOp || ''}">
+            <label class="checkout-label" for="step3-numero-op">Código de Operación Yape / Plin (Solo números) *</label>
+            <input type="text" id="step3-numero-op" class="checkout-input" placeholder="Ej: 839201 (6 a 10 dígitos)" maxlength="10" value="${p.numeroOp || ''}">
             <span class="checkout-error-msg" id="err-step3-numero-op"></span>
           </div>
         </div>
@@ -581,8 +762,8 @@ class CheckoutPageController {
         <div class="checkout-payment-box">
           <div class="checkout-form-grid">
             <div class="checkout-form-group full-width">
-              <label class="checkout-label" for="step3-card-number">Número de Tarjeta *</label>
-              <input type="text" id="step3-card-number" class="checkout-input" placeholder="4557 8899 0012 3456" maxlength="19" value="${p.numTarjeta || ''}">
+              <label class="checkout-label" for="step3-card-number">Número de Tarjeta (16 dígitos) *</label>
+              <input type="text" id="step3-card-number" class="checkout-input" placeholder="Ej: 4557889900123456" maxlength="16" value="${p.numTarjeta || ''}">
               <span class="checkout-error-msg" id="err-step3-card-number"></span>
             </div>
             <div class="checkout-form-group full-width">
@@ -592,12 +773,12 @@ class CheckoutPageController {
             </div>
             <div class="checkout-form-group">
               <label class="checkout-label" for="step3-card-exp">Vencimiento (MM/AA) *</label>
-              <input type="text" id="step3-card-exp" class="checkout-input" placeholder="12/28" maxlength="5" value="${p.expiracion || ''}">
+              <input type="text" id="step3-card-exp" class="checkout-input" placeholder="12/26" maxlength="5" value="${p.expiracion || ''}">
               <span class="checkout-error-msg" id="err-step3-card-exp"></span>
             </div>
             <div class="checkout-form-group">
               <label class="checkout-label" for="step3-card-cvv">CVV (3 dígitos) *</label>
-              <input type="password" id="step3-card-cvv" class="checkout-input" placeholder="123" maxlength="4" value="${p.cvv || ''}">
+              <input type="password" id="step3-card-cvv" class="checkout-input" placeholder="123" maxlength="3" value="${p.cvv || ''}">
               <span class="checkout-error-msg" id="err-step3-card-cvv"></span>
             </div>
           </div>
@@ -613,8 +794,8 @@ class CheckoutPageController {
             <p>Beneficiario: <strong>RYA TECH S.A.C.</strong> | RUC: 20608945123</p>
           </div>
           <div class="checkout-form-group" style="margin-top:6px;">
-            <label class="checkout-label" for="step3-numero-op">Código de Operación Bancaria *</label>
-            <input type="text" id="step3-numero-op" class="checkout-input" placeholder="Ej: BCP-4920192" value="${p.numeroOp || ''}">
+            <label class="checkout-label" for="step3-numero-op">Código de Operación Bancaria (Solo números) *</label>
+            <input type="text" id="step3-numero-op" class="checkout-input" placeholder="Ej: 4920192 (6 a 10 dígitos)" maxlength="10" value="${p.numeroOp || ''}">
             <span class="checkout-error-msg" id="err-step3-numero-op"></span>
           </div>
         </div>
@@ -637,32 +818,40 @@ class CheckoutPageController {
       this.checkoutData.pago.cvv = cvv;
 
       let isValid = true;
-      if (!num || num.length < 15) {
-        document.getElementById('err-step3-card-number').textContent = 'Ingresa un número de tarjeta válido (16 dígitos).';
+      if (!num || !/^\d{16}$/.test(num)) {
+        document.getElementById('err-step3-card-number').textContent = 'El número de tarjeta debe tener exactamente 16 números.';
+        document.getElementById('step3-card-number')?.classList.add('has-error');
         isValid = false;
       } else {
         document.getElementById('err-step3-card-number').textContent = '';
+        document.getElementById('step3-card-number')?.classList.remove('has-error');
       }
 
       if (!name || name.length < 3) {
-        document.getElementById('err-step3-card-name').textContent = 'Ingresa el nombre del titular.';
+        document.getElementById('err-step3-card-name').textContent = 'Ingresa el nombre del titular impreso en la tarjeta.';
+        document.getElementById('step3-card-name')?.classList.add('has-error');
         isValid = false;
       } else {
         document.getElementById('err-step3-card-name').textContent = '';
+        document.getElementById('step3-card-name')?.classList.remove('has-error');
       }
 
-      if (!exp || exp.length < 4) {
-        document.getElementById('err-step3-card-exp').textContent = 'Formato MM/AA inválido.';
+      if (!exp || !/^(0[1-9]|1[0-2])\/\d{2}$/.test(exp)) {
+        document.getElementById('err-step3-card-exp').textContent = 'Ingresa una fecha de vencimiento válida (MM/AA, ej: 12/26).';
+        document.getElementById('step3-card-exp')?.classList.add('has-error');
         isValid = false;
       } else {
         document.getElementById('err-step3-card-exp').textContent = '';
+        document.getElementById('step3-card-exp')?.classList.remove('has-error');
       }
 
-      if (!cvv || cvv.length < 3) {
-        document.getElementById('err-step3-card-cvv').textContent = 'CVV inválido (3 dígitos).';
+      if (!cvv || !/^\d{3}$/.test(cvv)) {
+        document.getElementById('err-step3-card-cvv').textContent = 'El CVV debe tener exactamente 3 números.';
+        document.getElementById('step3-card-cvv')?.classList.add('has-error');
         isValid = false;
       } else {
         document.getElementById('err-step3-card-cvv').textContent = '';
+        document.getElementById('step3-card-cvv')?.classList.remove('has-error');
       }
 
       return isValid;
@@ -670,11 +859,13 @@ class CheckoutPageController {
       const op = document.getElementById('step3-numero-op')?.value.trim();
       this.checkoutData.pago.numeroOp = op;
 
-      if (!op || op.length < 3) {
-        document.getElementById('err-step3-numero-op').textContent = 'Por favor ingresa el número o código de operación.';
+      if (!op || !/^\d{6,10}$/.test(op)) {
+        document.getElementById('err-step3-numero-op').textContent = 'El código de operación debe contener entre 6 y 10 dígitos numéricos.';
+        document.getElementById('step3-numero-op')?.classList.add('has-error');
         return false;
       } else {
         document.getElementById('err-step3-numero-op').textContent = '';
+        document.getElementById('step3-numero-op')?.classList.remove('has-error');
         return true;
       }
     }
@@ -687,6 +878,11 @@ class CheckoutPageController {
     const now = new Date().toISOString();
     const cart = Cart.getCart();
 
+    const isDomicilio = this.checkoutData.entrega.metodo === 'domicilio';
+    const entregaDesc = isDomicilio
+      ? `Despacho a Domicilio (${this.checkoutData.entrega.departamento}, ${this.checkoutData.entrega.ciudad} - ${this.checkoutData.entrega.direccion}${this.checkoutData.entrega.referencia ? ' | Ref: ' + this.checkoutData.entrega.referencia : ''})`
+      : `Retiro en Tienda Central RYA Tech${this.checkoutData.entrega.titularRetiroNombre ? ' (Autorizado: ' + this.checkoutData.entrega.titularRetiroNombre + (this.checkoutData.entrega.titularRetiroDni ? ' - DNI: ' + this.checkoutData.entrega.titularRetiroDni : '') + ')' : ''}`;
+
     const orderPayload = {
       id: orderUUID,
       codigoOrden: orderNumber,
@@ -695,9 +891,7 @@ class CheckoutPageController {
       usuarioEmail: this.checkoutData.cliente.email,
       usuarioTelefono: this.checkoutData.cliente.telefono,
       usuarioDocumento: `${this.checkoutData.cliente.tipoDoc}: ${this.checkoutData.cliente.numDoc}`,
-      metodoEntrega: this.checkoutData.entrega.metodo === 'domicilio'
-        ? `Despacho a Domicilio (${this.checkoutData.entrega.departamento} - ${this.checkoutData.entrega.direccion})`
-        : 'Retiro en Tienda Central RYA Tech',
+      metodoEntrega: entregaDesc,
       metodoPago: this.checkoutData.pago.metodo.toUpperCase(),
       estado: 'CONFIRMADO',
       montoTotal: totals.total,
