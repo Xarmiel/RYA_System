@@ -74,4 +74,4 @@
 #btnClearFilters:hover { background: rgba(255, 255, 255, 0.05); color: var(--text); border-color: var(--text); }
 
 #btnApplyFilters { background: var(--color-cyan); color: var(--color-black); border: 1px solid var(--color-cyan); }
-#btnApplyFilters:hover { background: var(--color-gray); border-color: var(--color-gray); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(194, 197, 204, 0.2); }
+#btnApplyFilters:hover { background: var(--color-gray); border-color: var(--color-gray); transform: translateY(-2px); }

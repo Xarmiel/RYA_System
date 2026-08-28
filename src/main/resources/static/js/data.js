@@ -1,9 +1,4 @@
-export async function fetchProductos() {
-  // Cuando se conecte con una API este sera sera el codigo:
-  // const response = await fetch('/api/productos'); 
-  // return await response.json();
-  
-  return [
+const PRODUCTOS_DATA = [
               // ============================================================
               // 1. PLACAS MADRE (MOTHERBOARDS) - 5 productos
               // ============================================================
@@ -146,6 +141,23 @@ export async function fetchProductos() {
               { id: 77, categoria: "Cámaras Web", fabricante: "Razer",     precio: 280, atributos: { resolucion_webcam: "2K / 1440p (Alta definición)", fps_webcam: "60 FPS o más", enfoque_webcam: "Enfoque Automático", iluminacion_webcam: "Con Aro de Luz LED", privacidad_webcam: "Con Cubierta de Privacidad", conectividad_webcam: "Cable USB-A" } },
               { id: 78, categoria: "Cámaras Web", fabricante: "Microsoft", precio: 150, atributos: { resolucion_webcam: "Full HD (1080p / Estándar)", fps_webcam: "30 FPS", enfoque_webcam: "Enfoque Fijo", iluminacion_webcam: "Sin Iluminación", privacidad_webcam: "Compatible con Windows Hello", conectividad_webcam: "Cable USB-A" } },
               { id: 79, categoria: "Cámaras Web", fabricante: "ASUS",      precio: 320, atributos: { resolucion_webcam: "4K Ultra HD (Streaming profesional)", fps_webcam: "60 FPS o más", enfoque_webcam: "Enfoque Automático", iluminacion_webcam: "Con Aro de Luz LED", privacidad_webcam: "Con Cubierta de Privacidad", conectividad_webcam: "Cable USB-C" } },
-              { id: 80, categoria: "Cámaras Web", fabricante: "Creative",  precio: 90,  atributos: { resolucion_webcam: "HD (720p / Económico)", fps_webcam: "30 FPS", enfoque_webcam: "Enfoque Fijo", iluminacion_webcam: "Sin Iluminación", privacidad_webcam: "Con Cubierta de Privacidad", conectividad_webcam: "Cable USB-A" } },
-          ];
-}
+              { id: 80, categoria: "Cámaras Web", fabricante: "Creative",  precio: 90,  atributos: { resolucion_webcam: "HD (720p / Económico)", fps_webcam: "30 FPS", enfoque_webcam: "Enfoque Fijo", iluminacion_webcam: "Sin Iluminación", privacidad_webcam: "Con Cubierta de Privacidad", conectividad_webcam: "Cable USB-A" } }
+];
+
+/**
+ * Simula una llamada asíncrona a la API REST de productos con retardo de red (400ms)
+ * y validación de conectividad.
+ */
+export async function fetchProductos(simularLatencia = true) {
+  // 1. Detección de estado de red offline
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+    throw new Error('NETWORK_OFFLINE');
+  }
+
+  // 2. Simulación de latencia de red para mostrar animaciones Skeleton
+  if (simularLatencia) {
+    await new Promise(resolve => setTimeout(resolve, 400));
+  }
+
+  return [...PRODUCTOS_DATA];
+}

@@ -1,27 +1,81 @@
 import { fetchProductos } from './data.js';
 import { NOMBRES_LEGIBLES } from './config.js';
+import { Cart } from './cart.js';
+import { inicializarMonitorDeRed, renderizarSkeletonDetalle, crearTarjetaErrorRed } from './network-ui.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
+  inicializarMonitorDeRed();
+  Cart.init();
+
+  const searchInput = document.getElementById('headerSearchInput');
+  searchInput?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && searchInput.value.trim()) {
+      window.location.href = `index.html?search=${encodeURIComponent(searchInput.value.trim())}`;
+    }
+  });
+
   const productId = Number(new URLSearchParams(window.location.search).get('id'));
   if (!Number.isInteger(productId) || productId < 1) {
-    mostrarError('No se especificó ningún producto.');
+    mostrarError('No se especificó ningún identificador de producto.');
     return;
   }
 
+  cargarDetalleProducto(productId);
+});
+
+async function cargarDetalleProducto(productId) {
+  const heroSection = document.querySelector('.product-hero');
+  const detailsSection = document.querySelector('.product-details-section');
+
+  // 1. Mostrar estado Skeleton en el héroe del producto
+  if (heroSection) {
+    heroSection.style.display = 'none';
+  }
+  if (detailsSection) {
+    detailsSection.style.display = 'none';
+  }
+
+  let skeletonContainer = document.getElementById('product-skeleton-container');
+  if (!skeletonContainer) {
+    skeletonContainer = document.createElement('div');
+    skeletonContainer.id = 'product-skeleton-container';
+    document.querySelector('.page-content')?.insertBefore(skeletonContainer, heroSection);
+  }
+  renderizarSkeletonDetalle(skeletonContainer);
+
   try {
-    const producto = (await fetchProductos()).find(item => item.id === productId);
+    const productos = await fetchProductos();
+    const producto = productos.find(item => item.id === productId);
+
     if (!producto) {
+      skeletonContainer.remove();
       mostrarError('El producto solicitado no existe o ya no está disponible.');
       return;
     }
+
+    // Quitar skeleton y mostrar secciones reales
+    skeletonContainer.remove();
+    if (heroSection) heroSection.style.display = '';
+    if (detailsSection) detailsSection.style.display = '';
+
     renderizarProducto(producto);
     configurarCantidad();
     configurarCarrito(producto);
   } catch (error) {
     console.error('No se pudo cargar el producto:', error);
-    mostrarError('No pudimos cargar la información del producto. Inténtalo nuevamente.');
+    skeletonContainer.remove();
+
+    const esOffline = !navigator.onLine || error.message === 'NETWORK_OFFLINE';
+    mostrarErrorDeRed(
+      esOffline ? 'Sin Conexión a Internet' : 'Error al Cargar el Producto',
+      esOffline
+        ? 'Revisa tu conexión a internet para poder ver las especificaciones de este producto.'
+        : 'Ocurrió un error al contactar al servidor de RYA Tech.',
+      () => cargarDetalleProducto(productId)
+    );
   }
-});
+}
+
 
 function renderizarProducto(producto) {
   const atributos = Object.entries(producto.atributos || {});
@@ -100,9 +154,19 @@ function configurarCantidad() {
 }
 
 function configurarCarrito(producto) {
-  document.getElementById('add-to-cart').addEventListener('click', () => {
-    const cantidad = Math.max(1, Number(document.getElementById('prod-quantity').value) || 1);
-    document.getElementById('cart-feedback').textContent = `${cantidad} unidad${cantidad === 1 ? '' : 'es'} de ${producto.fabricante} agregada${cantidad === 1 ? '' : 's'} al carrito.`;
+  const addBtn = document.getElementById('add-to-cart');
+  const feedback = document.getElementById('cart-feedback');
+  if (!addBtn) return;
+
+  addBtn.addEventListener('click', () => {
+    const cantidad = Math.max(1, Number(document.getElementById('prod-quantity')?.value) || 1);
+    Cart.addItem(producto, cantidad, true);
+    if (feedback) {
+      feedback.textContent = `${cantidad} unidad${cantidad === 1 ? '' : 'es'} de ${producto.fabricante} agregada${cantidad === 1 ? '' : 's'} al carrito.`;
+      setTimeout(() => {
+        if (feedback) feedback.textContent = '';
+      }, 4000);
+    }
   });
 }
 
@@ -120,3 +184,19 @@ function mostrarError(mensaje) {
   box.append(detail, link);
   content.appendChild(box);
 }
+
+function mostrarErrorDeRed(titulo, mensaje, onRetry) {
+  const content = document.querySelector('.page-content');
+  content.replaceChildren();
+  const cardError = crearTarjetaErrorRed({
+    titulo,
+    mensaje,
+    onRetry,
+    linkSecundario: {
+      href: 'index.html',
+      texto: 'Volver al catálogo'
+    }
+  });
+  content.appendChild(cardError);
+}
+

@@ -10,6 +10,21 @@ export let estado = {
 const container = document.getElementById('dynamicFilterContainer');
 const filterCountLabel = document.getElementById('filterCount');
 
+function notificarCambioFiltros() {
+  window.dispatchEvent(new CustomEvent('filtrosActualizados', { detail: { ...estado } }));
+}
+
+export function obtenerEstadoFiltros() {
+  return estado;
+}
+
+export function resetearFiltros() {
+  estado.categoriaActual = null;
+  estado.filtrosSeleccionados = {};
+  procesarFiltros();
+  notificarCambioFiltros();
+}
+
 export async function inicializarFiltros() {
   try {
     productosBase = await fetchProductos();
@@ -19,6 +34,11 @@ export async function inicializarFiltros() {
     document.getElementById('btnClearFilters')?.addEventListener('click', () => {
       estado.filtrosSeleccionados = {};
       procesarFiltros();
+      notificarCambioFiltros();
+    });
+
+    document.getElementById('btnApplyFilters')?.addEventListener('click', () => {
+      notificarCambioFiltros();
     });
   } catch (error) {
     console.error("Error al inicializar los filtros:", error);
@@ -29,12 +49,14 @@ export function cambiarCategoria(nuevaCategoria) {
   estado.categoriaActual = nuevaCategoria;
   estado.filtrosSeleccionados = {};
   procesarFiltros();
+  notificarCambioFiltros();
 }
 
 function procesarFiltros() {
   if(!container) return;
   if (!estado.categoriaActual) {
     renderizarUI({});
+    actualizarContadorGlobal();
     return;
   }
 
@@ -72,6 +94,19 @@ function procesarFiltros() {
 
 function renderizarUI(opcionesDisponibles) {
   container.innerHTML = '';
+
+  // Botón para ver todas las categorías si hay una categoría activa
+  if (estado.categoriaActual) {
+    const allCatBtn = document.createElement('button');
+    allCatBtn.type = 'button';
+    allCatBtn.className = 'btn-all-categories';
+    allCatBtn.style.cssText = 'width: 100%; background: rgba(0, 212, 255, 0.1); border: 1px solid var(--color-cyan); color: var(--color-cyan); padding: 8px 12px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; margin-bottom: 16px; text-align: center;';
+    allCatBtn.innerHTML = `← Ver todo el catálogo (${estado.categoriaActual} activo)`;
+    allCatBtn.addEventListener('click', () => {
+      cambiarCategoria(null);
+    });
+    container.appendChild(allCatBtn);
+  }
 
   for (const [macroCategoria, categorias] of Object.entries(JERARQUIA_CATEGORIAS)) {
     const macroDetails = document.createElement('details');
@@ -167,6 +202,7 @@ function renderizarUI(opcionesDisponibles) {
                 estado.filtrosSeleccionados[attrClave] = estado.filtrosSeleccionados[attrClave].filter(v => v !== valor);
               }
               procesarFiltros();
+              notificarCambioFiltros();
             });
 
             label.appendChild(checkbox);
