@@ -8,8 +8,8 @@ import java.util.UUID;
 
 public record ProductoResponseDto(
     UUID id,
-    Integer categoriaId,
-    String categoriaNombre,
+    Integer subcategoriaId,
+    String subcategoriaNombre,
     String sku,
     String nombre,
     String descripcion,

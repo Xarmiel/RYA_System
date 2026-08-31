@@ -32,10 +32,10 @@ public class ProductoServiceImpl implements ProductoService {
             throw new BadRequestException("Ya existe un producto con el SKU: " + dto.sku());
         }
 
-        Categoria categoria = categoriaRepository.findById(dto.categoriaId())
-            .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada con ID: " + dto.categoriaId()));
+        Categoria subcategoria = categoriaRepository.findById(dto.subcategoriaId())
+            .orElseThrow(() -> new ResourceNotFoundException("Subcategoría no encontrada con ID: " + dto.subcategoriaId()));
 
-        Producto producto = productoMapper.toEntity(dto, categoria);
+        Producto producto = productoMapper.toEntity(dto, subcategoria);
         return productoMapper.toResponseDto(productoRepository.save(producto));
     }
 
@@ -57,8 +57,8 @@ public class ProductoServiceImpl implements ProductoService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ProductoResponseDto> listarPorCategoria(Integer categoriaId) {
-        return productoRepository.findByCategoriaId(categoriaId).stream()
+    public List<ProductoResponseDto> listarPorCategoria(Integer subcategoriaId) {
+        return productoRepository.findByCategoriaId(subcategoriaId).stream()
             .map(productoMapper::toResponseDto)
             .toList();
     }

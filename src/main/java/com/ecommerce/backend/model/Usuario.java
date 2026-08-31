@@ -32,7 +32,7 @@ public class Usuario {
     private String passwordHash;
 
     @Enumerated(EnumType.STRING)
-    @Column(length = 20)
+    @Column(name = "rol", length = 20)
     @ColumnDefault("'CLIENTE'")
     private RolUsuario rol = RolUsuario.CLIENTE;
 

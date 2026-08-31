@@ -14,9 +14,9 @@ import java.util.List;
 @Component
 public class ProductoMapper {
 
-    public Producto toEntity(ProductoCreateDto dto, Categoria categoria) {
+    public Producto toEntity(ProductoCreateDto dto, Categoria subcategoria) {
         Producto producto = new Producto();
-        producto.setCategoria(categoria);
+        producto.setCategoria(subcategoria);
         producto.setSku(dto.sku());
         producto.setNombre(dto.nombre());
         producto.setDescripcion(dto.descripcion());
@@ -43,7 +43,7 @@ public class ProductoMapper {
         List<EspecificacionTecnicaResponseDto> especificaciones = producto.getEspecificaciones() == null 
             ? Collections.emptyList()
             : producto.getEspecificaciones().stream()
-                .map(e -> new EspecificacionTecnicaResponseDto  (e.getId(), e.getClave(), e.getValor()))
+                .map(e -> new EspecificacionTecnicaResponseDto(e.getId(), e.getClave(), e.getValor()))
                 .toList();
 
         return new ProductoResponseDto(

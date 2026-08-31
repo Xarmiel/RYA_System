@@ -6,8 +6,8 @@ import java.math.BigDecimal;
 import java.util.List;
 
 public record ProductoCreateDto(
-    @NotNull(message = "La categoría es obligatoria")
-    Integer categoriaId,
+    @NotNull(message = "El ID de la subcategoría es obligatorio")
+    Integer subcategoriaId,
 
     @NotBlank(message = "El SKU es obligatorio")
     @Size(max = 60)
