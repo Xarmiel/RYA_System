@@ -7,6 +7,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -17,20 +18,18 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponseDto> handleResourceNotFound(ResourceNotFoundException ex) {
         ErrorResponseDto error = new ErrorResponseDto(
-            HttpStatus.NOT_FOUND.value(),
-            HttpStatus.NOT_FOUND.getReasonPhrase(),
-            ex.getMessage()
-        );
+                HttpStatus.NOT_FOUND.value(),
+                HttpStatus.NOT_FOUND.getReasonPhrase(),
+                ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<ErrorResponseDto> handleBadRequest(BadRequestException ex) {
         ErrorResponseDto error = new ErrorResponseDto(
-            HttpStatus.BAD_REQUEST.value(),
-            HttpStatus.BAD_REQUEST.getReasonPhrase(),
-            ex.getMessage()
-        );
+                HttpStatus.BAD_REQUEST.value(),
+                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
@@ -42,21 +41,29 @@ public class GlobalExceptionHandler {
         }
 
         ErrorResponseDto error = new ErrorResponseDto(
-            HttpStatus.BAD_REQUEST.value(),
-            "Validation Error",
-            "Campos inválidos en la solicitud",
-            errors
-        );
+                HttpStatus.BAD_REQUEST.value(),
+                "Validation Error",
+                "Campos inválidos en la solicitud",
+                errors);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponseDto> handleGlobalException(Exception ex) {
         ErrorResponseDto error = new ErrorResponseDto(
-            HttpStatus.INTERNAL_SERVER_ERROR.value(),
-            HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
-            ex.getMessage() != null ? ex.getMessage() : "Ocurrió un error inesperado en el servidor"
-        );
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
+                ex.getMessage() != null ? ex.getMessage() : "Ocurrió un error inesperado en el servidor");
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponseDto> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        String mensaje = String.format("El parámetro '%s' debe ser un identificador válido (UUID)", ex.getName());
+        ErrorResponseDto error = new ErrorResponseDto(
+                HttpStatus.BAD_REQUEST.value(),
+                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                mensaje);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 }
