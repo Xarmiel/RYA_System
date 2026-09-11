@@ -69,6 +69,7 @@ public class PedidoServiceImpl implements PedidoService {
             detalle.setPrecioUnitario(producto.getPrecioBase());
 
             BigDecimal subtotal = producto.getPrecioBase().multiply(BigDecimal.valueOf(itemDto.cantidad()));
+            detalle.setSubtotal(subtotal);
             montoTotal = montoTotal.add(subtotal);
 
             detalles.add(detalle);

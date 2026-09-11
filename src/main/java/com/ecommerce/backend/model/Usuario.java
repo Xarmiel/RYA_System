@@ -33,9 +33,18 @@ public class Usuario {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "rol", length = 20)
-    @ColumnDefault("'CLIENTE'")
     private RolUsuario rol = RolUsuario.CLIENTE;
 
-    @Column(name = "fecha_registro", insertable = false, updatable = false)
+    @Column(name = "fecha_registro", updatable = false)
     private OffsetDateTime fechaRegistro;
+
+    @PrePersist
+    protected void onCreate() {
+        if (this.fechaRegistro == null) {
+            this.fechaRegistro = OffsetDateTime.now();
+        }
+        if (this.rol == null) {
+            this.rol = RolUsuario.CLIENTE;
+        }
+    }
 }

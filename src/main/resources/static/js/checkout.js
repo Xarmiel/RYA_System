@@ -658,9 +658,14 @@ class CheckoutPageController {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    document.getElementById('btn-confirm-payment').onclick = () => {
+    document.getElementById('btn-confirm-payment').onclick = async () => {
       if (this.validateStep3()) {
-        this.processOrder(totals);
+        const btn = document.getElementById('btn-confirm-payment');
+        if (btn) {
+          btn.disabled = true;
+          btn.textContent = 'Procesando pedido...';
+        }
+        await this.processOrder(totals);
       }
     };
   }
@@ -869,10 +874,10 @@ class CheckoutPageController {
     }
   }
 
-  processOrder(totals) {
-    const orderNumber = `PED-2026-${String(Math.floor(1000 + Math.random() * 9000))}`;
-    const orderUUID = generateUUID();
-    const userUUID = generateUUID();
+  async processOrder(totals) {
+    let orderUUID = generateUUID();
+    let orderNumber = `PED-2026-${String(Math.floor(1000 + Math.random() * 9000))}`;
+    let userUUID = generateUUID();
     const now = new Date().toISOString();
     const cart = Cart.getCart();
 
@@ -880,6 +885,38 @@ class CheckoutPageController {
     const entregaDesc = isDomicilio
       ? `Despacho a Domicilio (${this.checkoutData.entrega.departamento}, ${this.checkoutData.entrega.ciudad} - ${this.checkoutData.entrega.direccion}${this.checkoutData.entrega.referencia ? ' | Ref: ' + this.checkoutData.entrega.referencia : ''})`
       : `Retiro en Tienda Central RYA Tech${this.checkoutData.entrega.titularRetiroNombre ? ' (Autorizado: ' + this.checkoutData.entrega.titularRetiroNombre + (this.checkoutData.entrega.titularRetiroDni ? ' - DNI: ' + this.checkoutData.entrega.titularRetiroDni : '') + ')' : ''}`;
+
+    // Conectar con backend si está disponible
+    const isUuid = (val) => typeof val === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+    const hasBackendApi = typeof window !== 'undefined' && window.api && typeof window.api.crearPedido === 'function';
+
+    if (hasBackendApi) {
+      try {
+        const usuarioBackend = await window.api.registrarOObtenerUsuario(this.checkoutData.cliente);
+        if (usuarioBackend && usuarioBackend.id) {
+          userUUID = usuarioBackend.id;
+          const allItemsAreUuids = cart.every(item => isUuid(item.id));
+          if (allItemsAreUuids && cart.length > 0) {
+            const pedidoBackend = await window.api.crearPedido({
+              usuarioId: usuarioBackend.id,
+              metodoPago: this.checkoutData.pago.metodo.toUpperCase(),
+              detalles: cart.map(item => ({
+                productoId: item.id,
+                cantidad: Number(item.cantidad) || 1
+              }))
+            });
+
+            if (pedidoBackend && pedidoBackend.id) {
+              orderUUID = pedidoBackend.id;
+              orderNumber = `PED-${pedidoBackend.id.substring(0, 8).toUpperCase()}`;
+              console.log('Pedido registrado exitosamente en backend:', pedidoBackend);
+            }
+          }
+        }
+      } catch (backendErr) {
+        console.warn('No se pudo completar el pedido en el backend, usando modo offline:', backendErr.message);
+      }
+    }
 
     const orderPayload = {
       id: orderUUID,

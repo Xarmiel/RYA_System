@@ -34,8 +34,18 @@ public class Pedido {
     @Column(name = "metodo_pago", length = 50)
     private String metodoPago;
 
-    @Column(name = "fecha_registro", insertable = false, updatable = false)
+    @Column(name = "fecha_registro", updatable = false)
     private OffsetDateTime fechaRegistro;
+
+    @PrePersist
+    protected void onCreate() {
+        if (this.fechaRegistro == null) {
+            this.fechaRegistro = OffsetDateTime.now();
+        }
+        if (this.estado == null) {
+            this.estado = EstadoPedido.PENDIENTE;
+        }
+    }
 
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DetallePedido> detalles = new ArrayList<>();

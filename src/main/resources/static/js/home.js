@@ -19,6 +19,11 @@ async function renderizarCarrusel(categoria, contenedorId) {
     // 3. Limpiar los skeletons
     contenedor.innerHTML = '';
 
+    if (productos.length === 0) {
+      contenedor.innerHTML = '<div style="padding: 24px; color: var(--muted); font-size: 14px; text-align: center; width: 100%;">No hay productos registrados en esta sección actualmente.</div>';
+      return;
+    }
+
     // 4. Crear el HTML por cada producto
     productos.forEach(producto => {
       const articulo = document.createElement('div');
@@ -33,16 +38,21 @@ async function renderizarCarrusel(categoria, contenedorId) {
       const cat = producto.categoria || 'Componente';
       const precio = Number(producto.precio || 0).toFixed(2);
 
+      const imgSrc = producto.imagenUrl || '';
+      const imgContent = imgSrc
+        ? `<img src="${imgSrc}" alt="${fab} ${cat}" style="width:100%; height:100%; object-fit:contain; border-radius:12px;" onerror="this.parentElement.innerHTML='<span>[Foto ${fab}]</span>'">`
+        : `<span>[Foto ${fab}]</span>`;
+
       articulo.innerHTML = `
         <div class="img-placeholder">
-          <span>[Foto ${fab}]</span> 
+          ${imgContent}
         </div>
         <div class="product-info">
           <h4 style="color: var(--muted); font-size: 12px; margin-bottom: 4px;">${fab}</h4>
           <h3 style="font-size: 16px; margin: 0 0 8px 0;">${cat}</h3>
           <span class="price">S/ ${precio}</span>
         </div>
-        <button class="add-to-cart" type="button" onclick="event.stopPropagation(); if (window.agregarAlCarrito) window.agregarAlCarrito(${producto.id});">
+        <button class="add-to-cart" type="button" onclick="event.stopPropagation(); if (window.agregarAlCarrito) window.agregarAlCarrito('${producto.id}');">
           Añadir al carrito
         </button>
       `;

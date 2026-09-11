@@ -38,17 +38,29 @@ public class Producto {
     @Column(name = "precio_base", nullable = false, precision = 10, scale = 2)
     private BigDecimal precioBase;
 
+    @Column(name = "imagen_url", length = 500)
+    private String imagenUrl;
+
     @Enumerated(EnumType.STRING)
-    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
-    @Column(name = "tipo_producto", columnDefinition = "tipo_producto_enum", nullable = false)
-    private TipoProductoEnum tipoProducto;
+    @Column(name = "tipo_producto", length = 40, nullable = false)
+    private TipoProductoEnum tipoProducto = TipoProductoEnum.HARDWARE;
 
     private Integer stock = 0;
 
     private Boolean activo = true;
 
-    @Column(name = "fecha_registro", insertable = false, updatable = false)
+    @Column(name = "fecha_registro", updatable = false)
     private OffsetDateTime fechaRegistro;
+
+    @PrePersist
+    protected void onCreate() {
+        if (this.fechaRegistro == null) {
+            this.fechaRegistro = OffsetDateTime.now();
+        }
+        if (this.activo == null) {
+            this.activo = true;
+        }
+    }
 
     @OneToMany(mappedBy = "producto", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<EspecificacionTecnica> especificaciones = new ArrayList<>();

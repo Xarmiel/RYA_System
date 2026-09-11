@@ -111,7 +111,7 @@ function ordenarProductos(lista, criterio) {
       return copia.sort((a, b) => (a.fabricante || '').localeCompare(b.fabricante || '', 'es', { sensitivity: 'base' }));
     case 'relevance':
     default:
-      return copia.sort((a, b) => (Number(a.id) || 0) - (Number(b.id) || 0));
+      return copia;
   }
 }
 
@@ -350,25 +350,18 @@ async function cargarDatosCatalogo() {
     const fetchFn = (typeof window !== 'undefined' && window.fetchProductos) ? window.fetchProductos : (typeof fetchProductos === 'function' ? fetchProductos : null);
     if (fetchFn) {
       todosLosProductos = await fetchFn();
-    } else if (typeof PRODUCTOS_DATA !== 'undefined') {
-      todosLosProductos = [...PRODUCTOS_DATA];
-    } else if (window.PRODUCTOS_DATA) {
-      todosLosProductos = [...window.PRODUCTOS_DATA];
+    } else if (typeof window !== 'undefined' && window.api && typeof window.api.obtenerProductos === 'function') {
+      todosLosProductos = await window.api.obtenerProductos();
+    } else {
+      todosLosProductos = [];
     }
     
-    // Renderizamos el catálogo completo
+    // Renderizamos el catálogo completo con los datos reales
     renderizarCatalogo();
   } catch (error) {
-    console.error('Error al obtener los productos del catálogo:', error);
-    
-    // Si ocurre cualquier error, cargamos directamente los datos locales de emergencia
-    if (typeof PRODUCTOS_DATA !== 'undefined') {
-      todosLosProductos = [...PRODUCTOS_DATA];
-      renderizarCatalogo();
-    } else if (window.PRODUCTOS_DATA) {
-      todosLosProductos = [...window.PRODUCTOS_DATA];
-      renderizarCatalogo();
-    }
+    console.error('Error al obtener los productos del catálogo desde el backend:', error);
+    todosLosProductos = [];
+    renderizarCatalogo();
   }
 }
 

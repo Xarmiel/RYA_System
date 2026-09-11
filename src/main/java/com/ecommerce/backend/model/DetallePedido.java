@@ -30,7 +30,17 @@ public class DetallePedido {
     @Column(name = "precio_unitario", nullable = false, precision = 10, scale = 2)
     private BigDecimal precioUnitario;
 
-    @Generated(event = {EventType.INSERT, EventType.UPDATE})
-    @Column(name = "subtotal", insertable = false, updatable = false, precision = 10, scale = 2)
+    @Column(name = "subtotal", precision = 10, scale = 2, insertable = false, updatable = false)
+    @Generated
     private BigDecimal subtotal;
+
+    public BigDecimal getSubtotal() {
+        if (this.subtotal != null) {
+            return this.subtotal;
+        }
+        if (this.precioUnitario != null && this.cantidad != null) {
+            return this.precioUnitario.multiply(BigDecimal.valueOf(this.cantidad));
+        }
+        return BigDecimal.ZERO;
+    }
 }

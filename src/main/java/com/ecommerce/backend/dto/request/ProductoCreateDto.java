@@ -23,6 +23,9 @@ public record ProductoCreateDto(
     @DecimalMin(value = "0.01", message = "El precio base debe ser mayor a 0")
     BigDecimal precioBase,
 
+    @Size(max = 500)
+    String imagenUrl,
+
     @NotNull(message = "El tipo de producto es obligatorio")
     TipoProductoEnum tipoProducto,
 

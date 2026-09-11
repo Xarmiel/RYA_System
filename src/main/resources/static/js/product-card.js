@@ -52,9 +52,14 @@ function crearTarjetaProducto(producto) {
   const fab = escapeHtmlProductCard(producto.fabricante);
   const cat = escapeHtmlProductCard(producto.categoria);
 
+  const imgSrc = producto.imagenUrl ? escapeHtmlProductCard(producto.imagenUrl) : '';
+  const imgContent = imgSrc 
+    ? `<img src="${imgSrc}" alt="${fab} ${cat}" style="width:100%; height:100%; object-fit:contain; border-radius:12px;" onerror="this.parentElement.innerHTML='<span>[Foto ${fab}]</span>'">`
+    : `<span>[Foto ${fab}]</span>`;
+
   articulo.innerHTML = `
     <div class="img-placeholder">
-      <span>[Foto ${fab}]</span>
+      ${imgContent}
     </div>
     <div class="product-info">
       <span class="product-brand">${fab}</span>
@@ -62,7 +67,7 @@ function crearTarjetaProducto(producto) {
       ${specs.length ? `<p class="product-specs">${specs.map(s => escapeHtmlProductCard(s)).join(' &nbsp;|&nbsp; ')}</p>` : ''}
       <span class="price">S/ ${precioFormateado}</span>
     </div>
-    <button class="add-to-cart" type="button" onclick="event.stopPropagation(); if (window.agregarAlCarrito) window.agregarAlCarrito(${producto.id});">
+    <button class="add-to-cart" type="button" onclick="event.stopPropagation(); if (window.agregarAlCarrito) window.agregarAlCarrito('${escapeHtmlProductCard(producto.id)}');">
       Añadir al carrito
     </button>
   `;

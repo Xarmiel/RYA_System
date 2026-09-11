@@ -31,15 +31,13 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .cors(Customizer.withDefaults())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .headers(headers -> headers.frameOptions(frame -> frame.disable()))
             .authorizeHttpRequests(auth -> auth
                 // Recursos estáticos (HTML, CSS, JS, Imágenes)
-                .requestMatchers("/", "/index.html", "/html/**", "/css/**", "/js/**", "/images/**").permitAll()
+                .requestMatchers("/", "/index.html", "/html/**", "/css/**", "/js/**", "/images/**", "/h2-console/**").permitAll()
                 // Endpoints públicos de la API
-                .requestMatchers(HttpMethod.GET, "/api/productos/**").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/usuarios/**").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/pedidos/**").permitAll()
-                .requestMatchers("/api/**").permitAll() // Para fase de desarrollo
-                .anyRequest().authenticated()
+                .requestMatchers("/api/**").permitAll()
+                .anyRequest().permitAll()
             );
 
         return http.build();

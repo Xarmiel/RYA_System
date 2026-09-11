@@ -14,6 +14,7 @@ public record ProductoResponseDto(
     String nombre,
     String descripcion,
     BigDecimal precioBase,
+    String imagenUrl,
     TipoProductoEnum tipoProducto,
     Integer stock,
     Boolean activo,

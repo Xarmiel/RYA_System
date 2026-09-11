@@ -16,6 +16,7 @@ function formatCurrency(amount) {
  * Genera el SVG/data-URI para la miniatura del producto si no tiene imagen fija.
  */
 function getProductThumbnail(item) {
+  if (item.imagenUrl) return item.imagenUrl;
   if (item.imagen) return item.imagen;
   const marca = item.fabricante || 'RYA';
   const cat = item.categoria || 'Hardware';
@@ -147,7 +148,7 @@ class CartManager {
     if (!product || !product.id) return;
     const qty = Math.max(1, Number(quantity) || 1);
     const cart = this.getCart();
-    const existingIndex = cart.findIndex(item => item.id === product.id);
+    const existingIndex = cart.findIndex(item => String(item.id) === String(product.id));
 
     if (existingIndex > -1) {
       cart[existingIndex].cantidad = Number(cart[existingIndex].cantidad) + qty;
@@ -180,15 +181,23 @@ class CartManager {
   }
 
   /**
-   * Busca un producto por ID desde data.js y lo añade al carrito.
+   * Busca un producto por ID desde data.js o api.js y lo añade al carrito.
    */
   async addItemById(productId, quantity = 1, openDrawerImmediately = true) {
     try {
+      if (typeof window !== 'undefined' && window.api && window.api.obtenerProductoPorId) {
+        const prod = await window.api.obtenerProductoPorId(productId);
+        if (prod) {
+          this.addItem(prod, quantity, openDrawerImmediately);
+          return;
+        }
+      }
+
       const fetchFn = (typeof window !== 'undefined' && window.fetchProductos)
         ? window.fetchProductos
         : (typeof fetchProductos !== 'undefined' ? fetchProductos : null);
       const productos = fetchFn ? await fetchFn() : [];
-      const product = productos.find(p => p.id === Number(productId));
+      const product = productos.find(p => String(p.id) === String(productId));
       if (product) {
         this.addItem(product, quantity, openDrawerImmediately);
       } else {
@@ -212,7 +221,7 @@ class CartManager {
     }
 
     cart = cart.map(item => {
-      if (item.id === Number(productId)) {
+      if (String(item.id) === String(productId)) {
         return { ...item, cantidad: Math.min(99, qty) };
       }
       return item;
@@ -226,8 +235,8 @@ class CartManager {
    */
   removeItem(productId) {
     const cart = this.getCart();
-    const itemToRemove = cart.find(item => item.id === Number(productId));
-    const filteredCart = cart.filter(item => item.id !== Number(productId));
+    const itemToRemove = cart.find(item => String(item.id) === String(productId));
+    const filteredCart = cart.filter(item => String(item.id) !== String(productId));
 
     this.saveCart(filteredCart);
 
@@ -454,8 +463,8 @@ class CartManager {
     bodyEl?.querySelectorAll('.btn-qty-inc').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
-        const id = Number(btn.dataset.id);
-        const item = this.getCart().find(i => i.id === id);
+        const id = btn.dataset.id;
+        const item = this.getCart().find(i => String(i.id) === String(id));
         if (item) this.updateQuantity(id, item.cantidad + 1);
       });
     });
@@ -463,8 +472,8 @@ class CartManager {
     bodyEl?.querySelectorAll('.btn-qty-dec').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
-        const id = Number(btn.dataset.id);
-        const item = this.getCart().find(i => i.id === id);
+        const id = btn.dataset.id;
+        const item = this.getCart().find(i => String(i.id) === String(id));
         if (item) this.updateQuantity(id, item.cantidad - 1);
       });
     });
@@ -472,7 +481,7 @@ class CartManager {
     bodyEl?.querySelectorAll('.btn-remove-item').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
-        const id = Number(btn.dataset.id);
+        const id = btn.dataset.id;
         this.removeItem(id);
       });
     });
@@ -1183,9 +1192,14 @@ class CartManager {
       this.renderCheckoutStep();
     };
 
-    footerEl.querySelector('#btn-step3-confirm').onclick = () => {
+    footerEl.querySelector('#btn-step3-confirm').onclick = async () => {
       if (this.validateStep3()) {
-        this.processOrder(totals);
+        const btn = footerEl.querySelector('#btn-step3-confirm');
+        if (btn) {
+          btn.disabled = true;
+          btn.textContent = 'Procesando pedido...';
+        }
+        await this.processOrder(totals);
       }
     };
   }
@@ -1395,12 +1409,12 @@ class CartManager {
   }
 
   /**
-   * Procesa la orden ficticia y genera el PedidoResponseDto.
+   * Procesa la orden conectando con el backend (/api/pedidos) o con fallback local.
    */
-  processOrder(totals) {
-    const orderNumber = `PED-2026-${String(Math.floor(1000 + Math.random() * 9000))}`;
-    const orderUUID = generateUUID();
-    const userUUID = generateUUID();
+  async processOrder(totals) {
+    let orderUUID = generateUUID();
+    let orderNumber = `PED-2026-${String(Math.floor(1000 + Math.random() * 9000))}`;
+    let userUUID = generateUUID();
     const now = new Date().toISOString();
     const cart = this.getCart();
 
@@ -1408,6 +1422,38 @@ class CartManager {
     const entregaDesc = isDomicilio
       ? `Despacho a Domicilio (${this.checkoutData.entrega.departamento}, ${this.checkoutData.entrega.ciudad} - ${this.checkoutData.entrega.direccion}${this.checkoutData.entrega.referencia ? ' | Ref: ' + this.checkoutData.entrega.referencia : ''})`
       : `Retiro en Tienda Central RYA Tech${this.checkoutData.entrega.titularRetiroNombre ? ' (Autorizado: ' + this.checkoutData.entrega.titularRetiroNombre + (this.checkoutData.entrega.titularRetiroDni ? ' - DNI: ' + this.checkoutData.entrega.titularRetiroDni : '') + ')' : ''}`;
+
+    // Intentar procesar en backend si está disponible
+    const isUuid = (val) => typeof val === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+    const hasBackendApi = typeof window !== 'undefined' && window.api && typeof window.api.crearPedido === 'function';
+
+    if (hasBackendApi) {
+      try {
+        const usuarioBackend = await window.api.registrarOObtenerUsuario(this.checkoutData.cliente);
+        if (usuarioBackend && usuarioBackend.id) {
+          userUUID = usuarioBackend.id;
+          const allItemsAreUuids = cart.every(item => isUuid(item.id));
+          if (allItemsAreUuids && cart.length > 0) {
+            const pedidoBackend = await window.api.crearPedido({
+              usuarioId: usuarioBackend.id,
+              metodoPago: this.checkoutData.pago.metodo.toUpperCase(),
+              detalles: cart.map(item => ({
+                productoId: item.id,
+                cantidad: Number(item.cantidad) || 1
+              }))
+            });
+
+            if (pedidoBackend && pedidoBackend.id) {
+              orderUUID = pedidoBackend.id;
+              orderNumber = `PED-${pedidoBackend.id.substring(0, 8).toUpperCase()}`;
+              console.log('Pedido registrado exitosamente en backend:', pedidoBackend);
+            }
+          }
+        }
+      } catch (backendErr) {
+        console.warn('No se pudo completar el pedido en el backend, usando modo offline:', backendErr.message);
+      }
+    }
 
     const orderPayload = {
       id: orderUUID,

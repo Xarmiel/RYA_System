@@ -10,5 +10,6 @@ import java.util.Optional;
 @Repository
 public interface CategoriaRepository extends JpaRepository<Categoria, Integer> {
     Optional<Categoria> findBySlug(String slug);
+    Optional<Categoria> findByNombre(String nombre);
     List<Categoria> findByParentIsNull();
 }
