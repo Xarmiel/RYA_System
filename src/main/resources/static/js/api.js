@@ -215,6 +215,16 @@
   }
 
   /**
+   * Valida las credenciales del usuario con el backend (/api/usuarios/login).
+   */
+  async function iniciarSesion(credenciales) {
+    return await request('/usuarios/login', {
+      method: 'POST',
+      body: JSON.stringify(credenciales)
+    });
+  }
+
+  /**
    * Registra un nuevo usuario en el backend (/api/usuarios).
    */
   async function crearUsuario(usuarioDto) {
@@ -317,6 +327,7 @@
     obtenerProductosPorCategoria,
     obtenerCategorias,
     obtenerUsuarioPorEmail,
+    iniciarSesion,
     crearUsuario,
     registrarOObtenerUsuario,
     crearPedido,

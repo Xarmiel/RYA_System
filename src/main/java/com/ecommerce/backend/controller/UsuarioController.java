@@ -1,6 +1,7 @@
 package com.ecommerce.backend.controller;
 
 import com.ecommerce.backend.dto.request.UsuarioCreateDto;
+import com.ecommerce.backend.dto.request.UsuarioLoginDto;
 import com.ecommerce.backend.dto.response.UsuarioResponseDto;
 import com.ecommerce.backend.service.UsuarioService;
 import jakarta.validation.Valid;
@@ -18,6 +19,11 @@ import java.util.UUID;
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
+
+    @PostMapping("/login")
+    public ResponseEntity<UsuarioResponseDto> iniciarSesion(@Valid @RequestBody UsuarioLoginDto dto) {
+        return ResponseEntity.ok(usuarioService.autenticar(dto));
+    }
 
     @PostMapping
     public ResponseEntity<UsuarioResponseDto> crearUsuario(@Valid @RequestBody UsuarioCreateDto dto) {
