@@ -1,9 +1,11 @@
 package com.ecommerce.backend.service.implement;
 
 import com.ecommerce.backend.dto.request.UsuarioCreateDto;
+import com.ecommerce.backend.dto.request.UsuarioLoginDto;
 import com.ecommerce.backend.dto.response.UsuarioResponseDto;
 import com.ecommerce.backend.exception.BadRequestException;
 import com.ecommerce.backend.exception.ResourceNotFoundException;
+import com.ecommerce.backend.exception.UnauthorizedException;
 import com.ecommerce.backend.mapper.UsuarioMapper;
 import com.ecommerce.backend.model.Usuario;
 import com.ecommerce.backend.repository.UsuarioRepository;
@@ -33,6 +35,15 @@ public class UsuarioServiceImpl implements UsuarioService {
         Usuario usuario = usuarioMapper.toEntity(dto);
         usuario.setPasswordHash(passwordEncoder.encode(dto.password()));
         return usuarioMapper.toResponseDto(usuarioRepository.save(usuario));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public UsuarioResponseDto autenticar(UsuarioLoginDto dto) {
+        Usuario usuario = usuarioRepository.findByEmail(dto.email())
+            .filter(candidato -> passwordEncoder.matches(dto.password(), candidato.getPasswordHash()))
+            .orElseThrow(() -> new UnauthorizedException("Correo o contraseña incorrectos."));
+        return usuarioMapper.toResponseDto(usuario);
     }
 
     @Override

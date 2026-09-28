@@ -56,20 +56,15 @@ public class DataInitializer implements CommandLineRunner {
         // Macro Categoría 1: Hardware
         Categoria catHardware = subcategoriasMap.get("Hardware");
         if (catHardware == null) {
-            catHardware = new Categoria();
-            catHardware.setNombre("Hardware");
-            catHardware.setSlug("hardware");
-            catHardware = categoriaRepository.save(catHardware);
+            catHardware = obtenerOCrearCategoria("Hardware", "hardware", null);
             subcategoriasMap.put("Hardware", catHardware);
         }
 
         // Macro Categoría 2: Periféricos y Accesorios
         Categoria catPerifericos = subcategoriasMap.get("Periféricos y Accesorios");
         if (catPerifericos == null) {
-            catPerifericos = new Categoria();
-            catPerifericos.setNombre("Periféricos y Accesorios");
-            catPerifericos.setSlug("perifericos-y-accesorios");
-            catPerifericos = categoriaRepository.save(catPerifericos);
+            catPerifericos = obtenerOCrearCategoria(
+                    "Periféricos y Accesorios", "perifericos-y-accesorios", null);
             subcategoriasMap.put("Periféricos y Accesorios", catPerifericos);
         }
 
@@ -85,27 +80,29 @@ public class DataInitializer implements CommandLineRunner {
 
         for (String subNombre : hardwareSubs) {
             if (!subcategoriasMap.containsKey(subNombre)) {
-                Categoria sub = new Categoria();
-                sub.setParent(catHardware);
-                sub.setNombre(subNombre);
-                sub.setSlug(toSlug(subNombre));
-                sub = categoriaRepository.save(sub);
+                Categoria sub = obtenerOCrearCategoria(subNombre, toSlug(subNombre), catHardware);
                 subcategoriasMap.put(subNombre, sub);
             }
         }
 
         for (String subNombre : perifericosSubs) {
             if (!subcategoriasMap.containsKey(subNombre)) {
-                Categoria sub = new Categoria();
-                sub.setParent(catPerifericos);
-                sub.setNombre(subNombre);
-                sub.setSlug(toSlug(subNombre));
-                sub = categoriaRepository.save(sub);
+                Categoria sub = obtenerOCrearCategoria(subNombre, toSlug(subNombre), catPerifericos);
                 subcategoriasMap.put(subNombre, sub);
             }
         }
 
         return subcategoriasMap;
+    }
+
+    private Categoria obtenerOCrearCategoria(String nombre, String slug, Categoria parent) {
+        return categoriaRepository.findBySlug(slug).orElseGet(() -> {
+            Categoria categoria = new Categoria();
+            categoria.setParent(parent);
+            categoria.setNombre(nombre);
+            categoria.setSlug(slug);
+            return categoriaRepository.save(categoria);
+        });
     }
 
     private void inicializarUsuarios() {
