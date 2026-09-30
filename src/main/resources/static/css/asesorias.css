@@ -1,0 +1,47 @@
+/* Asesorías: reutiliza base.css, header.css y home.css. Solo se define lo que no existe. */
+
+.asesorias-hero { min-height: 0; padding-bottom: 64px; }
+.asesorias-hero .hero-card { min-height: 0; }
+.asesorias-hero .hero-icon { margin: 32px 0 18px; }
+.asesorias-schedule { color: var(--muted); font-size: 13px; }
+
+/* Tarjetas de tipos de asesoría (mismo patrón que .brands-showcase article) */
+.asesorias-grid { display: grid; gap: 16px; grid-template-columns: repeat(4, 1fr); }
+.asesoria-card { background: var(--color-blue-black); border: 1px solid var(--line); border-radius: 12px; display: flex; flex-direction: column; min-height: 240px; padding: 28px; transition: border-color .2s, transform .2s; }
+.asesoria-card:hover { border-color: var(--color-gray); transform: translateY(-3px); }
+.asesoria-card-tag { color: var(--color-cyan); font-size: 11px; font-weight: 700; letter-spacing: 1px; }
+.asesoria-card h3 { color: var(--text); font-family: 'Space Grotesk', sans-serif; font-size: 20px; line-height: 1.15; margin-top: 18px; }
+.asesoria-card p { color: var(--muted); font-size: 13px; line-height: 1.55; margin-top: 12px; }
+.asesoria-card-action { background: none; border: 0; color: var(--color-cyan); cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 700; margin-top: auto; padding: 18px 0 0; text-align: left; }
+.asesoria-card-action:hover, .asesoria-card-action:focus-visible { color: var(--text); }
+
+/* Solicitud de asesoría */
+.asesorias-request { align-items: center; display: grid; gap: 72px; grid-template-columns: .85fr 1.15fr; }
+.asesorias-request-copy h2 { font-family: 'Space Grotesk', sans-serif; font-size: clamp(28px, 3vw, 42px); letter-spacing: -1px; line-height: 1.1; }
+.asesorias-request-copy > p:not(.eyebrow) { color: var(--muted); line-height: 1.65; margin-top: 20px; max-width: 430px; }
+
+.asesorias-form { background: var(--color-blue-black); border: 1px solid var(--line); border-radius: 14px; display: flex; flex-direction: column; gap: 16px; padding: 30px; }
+.asesorias-field { display: flex; flex-direction: column; gap: 6px; }
+.asesorias-field label { color: var(--muted); font-size: 12px; font-weight: 600; }
+.asesorias-field input, .asesorias-field select, .asesorias-field textarea { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(194, 197, 204, 0.22); border-radius: 10px; color: var(--text); font-family: 'Inter', sans-serif; font-size: 13px; outline: none; padding: 11px 14px; resize: vertical; transition: all .2s ease; }
+.asesorias-field input:focus, .asesorias-field select:focus, .asesorias-field textarea:focus { background: rgba(0, 212, 255, 0.06); border-color: var(--color-cyan); box-shadow: 0 0 10px rgba(0, 212, 255, 0.2); }
+.asesorias-field select option { background: #071326; color: #FFFFFF; }
+.asesorias-field input::placeholder, .asesorias-field textarea::placeholder { color: rgba(194, 197, 204, 0.4); }
+.asesorias-field .has-error { background: rgba(255, 77, 109, 0.08); border-color: #FF4D6D; }
+.asesorias-feedback { color: #FF4D6D; font-size: 12px; min-height: 16px; }
+.asesorias-feedback.is-ok { color: var(--color-cyan); }
+.asesorias-submit { border: 0; cursor: pointer; font-family: inherit; font-size: 14px; }
+
+@media (max-width: 1200px) {
+  .asesorias-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 900px) {
+  .asesorias-request { gap: 36px; grid-template-columns: 1fr; }
+}
+
+@media (max-width: 620px) {
+  .asesorias-grid { grid-template-columns: 1fr; }
+  .asesorias-form { padding: 22px 20px; }
+  .asesorias-submit { width: 100%; }
+}
