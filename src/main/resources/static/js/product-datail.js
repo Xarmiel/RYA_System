@@ -78,7 +78,7 @@ async function cargarDetalleProducto(productId) {
 function renderizarProducto(producto) {
   const atributos = Object.entries(producto.atributos || {});
   const primerAtributo = atributos[0]?.[1] || '';
-  const nombre = `${producto.fabricante} ${producto.categoria} ${primerAtributo}`.trim();
+  const nombre = producto.nombre || `${producto.fabricante} ${producto.categoria} ${primerAtributo}`.trim();
 
   document.title = `${nombre} | RYA Tech`;
   document.getElementById('prod-brand').textContent = producto.fabricante;

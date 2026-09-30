@@ -1,9 +1,7 @@
 const STORAGE_KEY = 'rya_cart_v1';
 const ORDERS_STORAGE_KEY = 'rya_orders_v1';
 
-/**
- * Formatea un monto numérico en formato de moneda peruana (S/ 1,250.00).
- */
+
 function formatCurrency(amount) {
   return `S/ ${Number(amount || 0).toLocaleString('es-PE', {
     minimumFractionDigits: 2,
@@ -12,9 +10,7 @@ function formatCurrency(amount) {
 }
 
 
-/**
- * Genera el SVG/data-URI para la miniatura del producto si no tiene imagen fija.
- */
+
 function getProductThumbnail(item) {
   if (item.imagenUrl) return item.imagenUrl;
   if (item.imagen) return item.imagen;
@@ -31,9 +27,7 @@ function getProductThumbnail(item) {
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
 }
 
-/**
- * Genera un UUID v4 simplificado compatible con el backend.
- */
+
 function generateUUID() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
     const r = (Math.random() * 16) | 0;
@@ -50,8 +44,7 @@ class CartManager {
     this.checkoutModalEl = null;
     this.isInitialized = false;
 
-    // Estado del Checkout Multipasos
-    this.checkoutStep = 1; // 1: Cliente, 2: Entrega, 3: Pago, 4: Confirmación
+    this.checkoutStep = 1;
     this.checkoutData = {
       cliente: {
         tipoDoc: 'DNI',
@@ -61,7 +54,7 @@ class CartManager {
         telefono: ''
       },
       entrega: {
-        metodo: 'domicilio', // 'domicilio' | 'tienda'
+        metodo: 'domicilio',
         departamento: 'Ica',
         ciudad: 'Ica',
         direccion: '',
@@ -70,7 +63,7 @@ class CartManager {
         titularRetiroDni: ''
       },
       pago: {
-        metodo: 'yape', // 'yape' | 'tarjeta' | 'transferencia'
+        metodo: 'yape',
         numeroOp: '',
         titularTarjeta: '',
         numTarjeta: '',
@@ -81,9 +74,7 @@ class CartManager {
     this.orderResult = null;
   }
 
-  /**
-   * Inicializa el carrito, inyecta los elementos del DOM y sincroniza los botones.
-   */
+  
   init() {
     if (this.isInitialized) return;
     this.ensureDOMStructure();
@@ -92,9 +83,7 @@ class CartManager {
     this.isInitialized = true;
   }
 
-  /**
-   * Obtiene la lista actual de productos del localStorage.
-   */
+  
   getCart() {
     try {
       const data = localStorage.getItem(STORAGE_KEY);
@@ -105,9 +94,7 @@ class CartManager {
     }
   }
 
-  /**
-   * Guarda la lista de productos en el localStorage y actualiza la interfaz.
-   */
+  
   saveCart(cart) {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(cart));
@@ -119,9 +106,7 @@ class CartManager {
     }
   }
 
-  /**
-   * Calcula los totales financieros (Subtotal sin IGV, IGV 18%, Total general y cantidad de items).
-   */
+  
   getTotals() {
     const cart = this.getCart();
     const count = cart.reduce((sum, item) => sum + (Number(item.cantidad) || 0), 0);
@@ -141,9 +126,7 @@ class CartManager {
     };
   }
 
-  /**
-   * Añade un producto al carrito o incrementa su cantidad.
-   */
+  
   addItem(product, quantity = 1, openDrawerImmediately = true) {
     if (!product || !product.id) return;
     const qty = Math.max(1, Number(quantity) || 1);
@@ -180,9 +163,7 @@ class CartManager {
     }
   }
 
-  /**
-   * Busca un producto por ID desde data.js o api.js y lo añade al carrito.
-   */
+  
   async addItemById(productId, quantity = 1, openDrawerImmediately = true) {
     try {
       if (typeof window !== 'undefined' && window.api && window.api.obtenerProductoPorId) {
@@ -208,9 +189,7 @@ class CartManager {
     }
   }
 
-  /**
-   * Actualiza la cantidad de un producto específico.
-   */
+  
   updateQuantity(productId, newQty) {
     const qty = Number(newQty);
     let cart = this.getCart();
@@ -230,9 +209,7 @@ class CartManager {
     this.saveCart(cart);
   }
 
-  /**
-   * Elimina un producto del carrito.
-   */
+  
   removeItem(productId) {
     const cart = this.getCart();
     const itemToRemove = cart.find(item => String(item.id) === String(productId));
@@ -248,9 +225,7 @@ class CartManager {
     }
   }
 
-  /**
-   * Vacía completamente el carrito.
-   */
+  
   clearCart() {
     this.saveCart([]);
     this.showToast({
@@ -259,11 +234,8 @@ class CartManager {
     });
   }
 
-  /**
-   * Crea e inyecta la estructura HTML del Drawer, Overlay, Toast Container y Checkout Modal si no existen.
-   */
+  
   ensureDOMStructure() {
-    // Overlay
     if (!document.getElementById('cart-drawer-overlay')) {
       this.overlayEl = document.createElement('div');
       this.overlayEl.id = 'cart-drawer-overlay';
@@ -273,7 +245,6 @@ class CartManager {
       this.overlayEl = document.getElementById('cart-drawer-overlay');
     }
 
-    // Drawer
     if (!document.getElementById('cart-drawer')) {
       this.drawerEl = document.createElement('aside');
       this.drawerEl.id = 'cart-drawer';
@@ -302,7 +273,6 @@ class CartManager {
       this.drawerEl = document.getElementById('cart-drawer');
     }
 
-    // Toast Container
     if (!document.getElementById('toast-container')) {
       this.toastContainerEl = document.createElement('div');
       this.toastContainerEl.id = 'toast-container';
@@ -313,7 +283,6 @@ class CartManager {
       this.toastContainerEl = document.getElementById('toast-container');
     }
 
-    // Checkout Modal Multipasos
     if (!document.getElementById('cart-checkout-modal')) {
       this.checkoutModalEl = document.createElement('div');
       this.checkoutModalEl.id = 'cart-checkout-modal';
@@ -345,9 +314,7 @@ class CartManager {
     }
   }
 
-  /**
-   * Renderiza el contenido del Drawer (items y desglose de precios).
-   */
+  
   renderDrawer() {
     const bodyEl = document.getElementById('cart-drawer-body');
     const footerEl = document.getElementById('cart-drawer-footer');
@@ -385,7 +352,6 @@ class CartManager {
 
     footerEl.style.display = 'flex';
 
-    // Renderizar productos
     bodyEl.innerHTML = cart.map(item => {
       const itemSubtotal = formatCurrency(Number(item.precio) * Number(item.cantidad));
       const thumbnailSrc = getProductThumbnail(item);
@@ -423,7 +389,6 @@ class CartManager {
       `;
     }).join('');
 
-    // Renderizar pie con desglose de precios (Subtotal, IGV y Total)
     footerEl.innerHTML = `
       <div class="cart-summary-box">
         <div class="cart-summary-row">
@@ -453,9 +418,7 @@ class CartManager {
     this.bindDrawerItemEvents();
   }
 
-  /**
-   * Conecta los eventos de incremento, decremento y eliminación dentro del Drawer.
-   */
+  
   bindDrawerItemEvents() {
     const bodyEl = document.getElementById('cart-drawer-body');
     const footerEl = document.getElementById('cart-drawer-footer');
@@ -502,9 +465,7 @@ class CartManager {
     });
   }
 
-  /**
-   * Abre el Drawer lateral.
-   */
+  
   openDrawer() {
     this.ensureDOMStructure();
     this.renderDrawer();
@@ -513,18 +474,14 @@ class CartManager {
     document.body.style.overflow = 'hidden';
   }
 
-  /**
-   * Cierra el Drawer lateral.
-   */
+  
   closeDrawer() {
     this.overlayEl?.classList.remove('is-active');
     this.drawerEl?.classList.remove('is-active');
     document.body.style.overflow = '';
   }
 
-  /**
-   * Actualiza el texto y badge de todos los botones de carrito en la página (.cart-btn).
-   */
+  
   updateCartBadge() {
     const { count } = this.getTotals();
     const cartButtons = document.querySelectorAll('.cart-btn');
@@ -541,9 +498,7 @@ class CartManager {
     });
   }
 
-  /**
-   * Efecto visual de pulso en el botón del carrito al añadir productos.
-   */
+  
   animateCartButton() {
     const cartButtons = document.querySelectorAll('.cart-btn');
     cartButtons.forEach(btn => {
@@ -553,9 +508,7 @@ class CartManager {
     });
   }
 
-  /**
-   * Muestra una notificación flotante (Toast) elegante en la esquina de la pantalla.
-   */
+  
   showToast({ title = 'Notificación', message = '', actionText = null, onAction = null, duration = 3500 }) {
     this.ensureDOMStructure();
     if (!this.toastContainerEl) return;
@@ -607,13 +560,9 @@ class CartManager {
     }
   }
 
-  /* ==========================================================================
-     FLUJO DE CHECKOUT MULTIPASO
-     ========================================================================== */
+  
 
-  /**
-   * Abre el modal de Checkout e inicializa en el paso 1.
-   */
+  
   openCheckoutModal() {
     this.ensureDOMStructure();
     const cart = this.getCart();
@@ -633,17 +582,13 @@ class CartManager {
     document.body.style.overflow = 'hidden';
   }
 
-  /**
-   * Cierra el modal de Checkout.
-   */
+  
   closeCheckoutModal() {
     this.checkoutModalEl?.classList.remove('is-active');
     document.body.style.overflow = '';
   }
 
-  /**
-   * Renderiza el paso actual del modal de Checkout.
-   */
+  
   renderCheckoutStep() {
     this.renderStepper();
     const bodyEl = document.getElementById('checkout-modal-body');
@@ -651,7 +596,6 @@ class CartManager {
     const totals = this.getTotals();
     if (!bodyEl || !footerEl) return;
 
-    // Conectar botón de cierre del modal
     this.checkoutModalEl.querySelector('#btn-close-checkout').onclick = () => this.closeCheckoutModal();
 
     switch (this.checkoutStep) {
@@ -670,9 +614,7 @@ class CartManager {
     }
   }
 
-  /**
-   * Renderiza el indicador de progreso (Stepper).
-   */
+  
   renderStepper() {
     const stepperEl = document.getElementById('checkout-stepper');
     if (!stepperEl) return;
@@ -703,9 +645,7 @@ class CartManager {
     }).join('');
   }
 
-  /**
-   * Paso 1: Datos del Cliente (UsuarioCreateDto).
-   */
+  
   renderStep1Client(bodyEl, footerEl, totals) {
     const c = this.checkoutData.cliente;
 
@@ -815,7 +755,6 @@ class CartManager {
       </div>
     `;
 
-    // Eventos
     footerEl.querySelector('#btn-step1-cancel').onclick = () => this.closeCheckoutModal();
     footerEl.querySelector('#btn-step1-next').onclick = () => {
       if (this.validateStep1()) {
@@ -825,9 +764,7 @@ class CartManager {
     };
   }
 
-  /**
-   * Validación del Paso 1.
-   */
+  
   validateStep1() {
     let isValid = true;
     const tipoDoc = document.getElementById('inp-tipo-doc')?.value;
@@ -836,7 +773,6 @@ class CartManager {
     const email = document.getElementById('inp-email')?.value.trim();
     const telefono = document.getElementById('inp-telefono')?.value.trim();
 
-    // Guardar en estado
     this.checkoutData.cliente = { tipoDoc, numDoc, nombre, email, telefono };
 
     const errNumDoc = document.getElementById('err-num-doc');
@@ -844,7 +780,6 @@ class CartManager {
     const errEmail = document.getElementById('err-email');
     const errTelefono = document.getElementById('err-telefono');
 
-    // Validación DNI (8 dígitos) / RUC (11 dígitos) / CE
     if (tipoDoc === 'DNI') {
       if (!numDoc || !/^\d{8}$/.test(numDoc)) {
         errNumDoc.textContent = 'El DNI debe contener exactamente 8 números.';
@@ -874,7 +809,6 @@ class CartManager {
       }
     }
 
-    // Nombre
     if (!nombre || nombre.length < 3) {
       errNombre.textContent = 'El nombre completo o razón social es obligatorio.';
       document.getElementById('inp-nombre')?.classList.add('has-error');
@@ -884,7 +818,6 @@ class CartManager {
       document.getElementById('inp-nombre')?.classList.remove('has-error');
     }
 
-    // Email (con @ y formato válido)
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email || !email.includes('@') || !emailRegex.test(email)) {
       errEmail.textContent = 'Ingresa un correo electrónico válido que incluya "@" y dominio (ej: usuario@correo.com).';
@@ -895,7 +828,6 @@ class CartManager {
       document.getElementById('inp-email')?.classList.remove('has-error');
     }
 
-    // Teléfono (exactamente 9 números)
     if (!telefono || !/^\d{9}$/.test(telefono)) {
       errTelefono.textContent = 'El teléfono debe contener exactamente 9 números.';
       document.getElementById('inp-telefono')?.classList.add('has-error');
@@ -908,9 +840,7 @@ class CartManager {
     return isValid;
   }
 
-  /**
-   * Paso 2: Método de Entrega.
-   */
+  
   renderStep2Delivery(bodyEl, footerEl, totals) {
     const e = this.checkoutData.entrega;
 
@@ -1125,9 +1055,7 @@ class CartManager {
     }
   }
 
-  /**
-   * Paso 3: Método de Pago.
-   */
+  
   renderStep3Payment(bodyEl, footerEl, totals) {
     const p = this.checkoutData.pago;
 
@@ -1228,12 +1156,10 @@ class CartManager {
       const cardExpInput = document.getElementById('inp-card-exp');
       const cardCvvInput = document.getElementById('inp-card-cvv');
 
-      // Limitar a solo 16 números
       cardNumInput?.addEventListener('input', (e) => {
         e.target.value = e.target.value.replace(/\D/g, '').slice(0, 16);
       });
 
-      // Auto agregar / tras escribir mes (MM/AA)
       cardExpInput?.addEventListener('input', (e) => {
         let val = e.target.value.replace(/\D/g, '').slice(0, 4);
         if (val.length >= 2) {
@@ -1243,12 +1169,10 @@ class CartManager {
         }
       });
 
-      // Limitar a 3 dígitos CVV
       cardCvvInput?.addEventListener('input', (e) => {
         e.target.value = e.target.value.replace(/\D/g, '').slice(0, 3);
       });
     } else {
-      // Código de operación solo números (6 a 10 dígitos)
       const opInput = document.getElementById('inp-numero-op');
       opInput?.addEventListener('input', (e) => {
         e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10);
@@ -1396,9 +1320,7 @@ class CartManager {
     }
   }
 
-  /**
-   * Procesa la orden conectando con el backend (/api/pedidos) o con fallback local.
-   */
+  
   async processOrder(totals) {
     let orderUUID = generateUUID();
     let orderNumber = `PED-2026-${String(Math.floor(1000 + Math.random() * 9000))}`;
@@ -1411,7 +1333,6 @@ class CartManager {
       ? `Despacho a Domicilio (${this.checkoutData.entrega.departamento}, ${this.checkoutData.entrega.ciudad} - ${this.checkoutData.entrega.direccion}${this.checkoutData.entrega.referencia ? ' | Ref: ' + this.checkoutData.entrega.referencia : ''})`
       : `Retiro en Tienda Central RYA Tech${this.checkoutData.entrega.titularRetiroNombre ? ' (Autorizado: ' + this.checkoutData.entrega.titularRetiroNombre + (this.checkoutData.entrega.titularRetiroDni ? ' - DNI: ' + this.checkoutData.entrega.titularRetiroDni : '') + ')' : ''}`;
 
-    // Intentar procesar en backend si está disponible
     const isUuid = (val) => typeof val === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
     const hasBackendApi = typeof window !== 'undefined' && window.api && typeof window.api.crearPedido === 'function';
 
@@ -1472,7 +1393,6 @@ class CartManager {
       }))
     };
 
-    // Guardar en el historial de órdenes de localStorage
     try {
       const orders = JSON.parse(localStorage.getItem(ORDERS_STORAGE_KEY) || '[]');
       orders.unshift(orderPayload);
@@ -1483,10 +1403,8 @@ class CartManager {
 
     this.orderResult = orderPayload;
 
-    // Vaciar el carrito
     this.saveCart([]);
 
-    // Avanzar a la pantalla de confirmación
     this.checkoutStep = 4;
     this.renderCheckoutStep();
 
@@ -1497,9 +1415,7 @@ class CartManager {
     });
   }
 
-  /**
-   * Paso 4: Pantalla de Confirmación de Pedido (Order Success Screen / Voucher).
-   */
+  
   renderStep4Confirmation(bodyEl, footerEl) {
     const o = this.orderResult;
     if (!o) return;
@@ -1593,30 +1509,24 @@ class CartManager {
     footerEl.innerHTML = '';
     footerEl.style.display = 'none';
 
-    // Generar enlace dinámico de WhatsApp
     const waText = encodeURIComponent(
       `¡Hola RYA Tech! Acabo de registrar mi pedido *${o.codigoOrden}* por un total de *${o.formattedTotal}* a nombre de *${o.usuarioNombre}*. Deseo consultar el estado de mi despacho.`
     );
     const waBtn = bodyEl.querySelector('#btn-whatsapp-order');
     if (waBtn) waBtn.href = `https://wa.me/51987654321?text=${waText}`;
 
-    // Imprimir
     bodyEl.querySelector('#btn-print-order').onclick = () => {
       window.print();
     };
 
-    // Seguir Comprando
     bodyEl.querySelector('#btn-finish-shopping').onclick = () => {
       this.closeCheckoutModal();
       window.location.href = 'index.html';
     };
   }
 
-  /**
-   * Vincula listeners globales (Escape, clicks en .cart-btn y overlay, sincronización multi-pestaña).
-   */
+  
   bindGlobalEvents() {
-    // Botones de abrir carrito en el header
     document.addEventListener('click', (e) => {
       const cartBtn = e.target.closest('.cart-btn');
       if (cartBtn) {
@@ -1625,11 +1535,9 @@ class CartManager {
       }
     });
 
-    // Cerrar con botón X o overlay
     this.overlayEl?.addEventListener('click', () => this.closeDrawer());
     document.getElementById('btn-close-cart')?.addEventListener('click', () => this.closeDrawer());
 
-    // Cerrar con tecla Escape
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         this.closeDrawer();
@@ -1652,7 +1560,6 @@ class CartManager {
 // Instancia singleton global
 const Cart = new CartManager();
 
-// Inicialización automática cuando el DOM está listo
 if (typeof document !== 'undefined') {
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => Cart.init());
@@ -1661,7 +1568,6 @@ if (typeof document !== 'undefined') {
   }
 }
 
-// Exponer en window para llamadas globales e inline como onclick="agregarAlCarrito(id)"
 if (typeof window !== 'undefined') {
   window.Cart = Cart;
   window.formatCurrency = formatCurrency;

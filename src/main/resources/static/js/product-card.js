@@ -1,5 +1,5 @@
 /**
- * Limpia un valor crudo de "atributos" para que se vea bien como chip corto.
+ * Limpia un valor crudo de especificaciones técnicas para que se vea bien como chip corto.
  */
 function limpiarValor(valor) {
   if (!valor) return '';
@@ -11,16 +11,43 @@ function limpiarValor(valor) {
 }
 
 /**
- * Arma la línea de specs (2-3 atributos) configurada en ATRIBUTOS_TARJETA
+ * Obtiene hasta 3 valores de la tabla especificaciones_tecnicas (excluyendo 'fabricante').
+ * No muestra las claves, únicamente los valores limpios separados.
  */
 function obtenerSpecs(producto) {
-  const cardAttrs = (typeof window !== 'undefined' && window.ATRIBUTOS_TARJETA)
-    ? window.ATRIBUTOS_TARJETA
-    : (typeof ATRIBUTOS_TARJETA !== 'undefined' ? ATRIBUTOS_TARJETA : {});
-  const claves = cardAttrs[producto.categoria] || [];
-  return claves
-    .map(clave => limpiarValor(producto.atributos?.[clave]))
-    .filter(Boolean);
+  if (!producto) return [];
+
+  const valores = [];
+
+  // 1. Si cuenta con el array directo de especificaciones de la base de datos
+  if (Array.isArray(producto.especificaciones) && producto.especificaciones.length > 0) {
+    for (const esp of producto.especificaciones) {
+      if (!esp) continue;
+      const clave = (esp.clave || '').toString().toLowerCase().trim();
+      if (clave === 'fabricante') continue;
+
+      const valorLimpio = limpiarValor(esp.valor);
+      if (valorLimpio && !valores.includes(valorLimpio)) {
+        valores.push(valorLimpio);
+        if (valores.length === 3) break;
+      }
+    }
+  }
+
+  // 2. Si no se completaron o viene en formato de mapa de atributos
+  if (valores.length < 3 && producto.atributos && typeof producto.atributos === 'object') {
+    for (const [clave, val] of Object.entries(producto.atributos)) {
+      if (clave.toLowerCase().trim() === 'fabricante') continue;
+
+      const valorLimpio = limpiarValor(val);
+      if (valorLimpio && !valores.includes(valorLimpio)) {
+        valores.push(valorLimpio);
+        if (valores.length === 3) break;
+      }
+    }
+  }
+
+  return valores;
 }
 
 /**
@@ -50,11 +77,13 @@ function crearTarjetaProducto(producto) {
   const specs = obtenerSpecs(producto);
   const precioFormateado = Number(producto.precio || 0).toFixed(2);
   const fab = escapeHtmlProductCard(producto.fabricante);
+  // Mostrar el nombre real del producto en la card (fallback a categoría si estuviera ausente)
+  const nombreProducto = escapeHtmlProductCard(producto.nombre || producto.categoria);
   const cat = escapeHtmlProductCard(producto.categoria);
 
   const imgSrc = producto.imagenUrl ? escapeHtmlProductCard(producto.imagenUrl) : '';
   const imgContent = imgSrc 
-    ? `<img src="${imgSrc}" alt="${fab} ${cat}" style="width:100%; height:100%; object-fit:contain; border-radius:12px;" onerror="this.parentElement.innerHTML='<span>[Foto ${fab}]</span>'">`
+    ? `<img src="${imgSrc}" alt="${nombreProducto}" style="width:100%; height:100%; object-fit:contain; border-radius:12px;" onerror="this.parentElement.innerHTML='<span>[Foto ${fab}]</span>'">`
     : `<span>[Foto ${fab}]</span>`;
 
   articulo.innerHTML = `
@@ -63,7 +92,7 @@ function crearTarjetaProducto(producto) {
     </div>
     <div class="product-info">
       <span class="product-brand">${fab}</span>
-      <h3 class="product-name">${cat}</h3>
+      <h3 class="product-name">${nombreProducto}</h3>
       ${specs.length ? `<p class="product-specs">${specs.map(s => escapeHtmlProductCard(s)).join(' &nbsp;|&nbsp; ')}</p>` : ''}
       <span class="price">S/ ${precioFormateado}</span>
     </div>
